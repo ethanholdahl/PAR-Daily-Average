@@ -72,7 +72,7 @@ ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,0,0,2008,78)/90, col = "
 
 ###Creating projections from each observation
 
-###Max PAR: .487*1361/sin(elevation)
+#Max PAR: .487*1361/sin(elevation)
 library(tidyverse)
 time = c(0,1/8,2/8,3/8,4/8,5/8,6/8,7/8)
 observations = tibble(time, elevation(time,Latitude,Longitude,year,day))
@@ -89,3 +89,12 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   scale_x_time()+
   geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361)))
 
+
+###Creating a function that will plot the Wang et al. algorithm for each point
+
+wangInstPAR = function(t, daylightObservationsTibble){
+  if (dim(daylightObservationsTibble)[1]==1){
+    #I use equation 6.2
+    daylightObservationsTibble[1,1]
+  }
+}
