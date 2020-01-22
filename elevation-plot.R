@@ -1,7 +1,9 @@
+library(ggplot2)
+
 Latitude = 0
 Longitude = 0
 year = 2008
-day = 1
+day = 78
 t=.5
 
 
@@ -15,7 +17,7 @@ elevation = function(t,Latitude,Longitude,year,day){
   ##Note: the variation seen throughout a given day is so small that we can
   ##treat these as constants. More on this later.
   JulianCentury = (JulianDay-2451545)/36525;
-  GeomMeanLongSunDeg = 280.46646+JulianCentury*(36000.76983+JulianCentury*.0003032)%%360;
+  GeomMeanLongSunDeg = (280.46646+JulianCentury*(36000.76983+JulianCentury*.0003032))%%360;
   GeomMeanAnomSunDeg = 357.52911+JulianCentury*(35999.05029 - 0.0001537*JulianCentury);
   EccentEarthOrbit = 0.016708634-JulianCentury*(0.000042037+0.0000001267*JulianCentury);
   SunEqOfCtr = sin(pi/180*(GeomMeanAnomSunDeg))*(1.914602-JulianCentury*(0.004817+0.000014*JulianCentury))+sin(pi/180*(2*GeomMeanAnomSunDeg))*(0.019993-0.000101*JulianCentury)+sin(pi/180*(3*GeomMeanAnomSunDeg))*0.000289;
@@ -44,8 +46,21 @@ elevation = function(t,Latitude,Longitude,year,day){
 
   #90-(acos(sin(Latitude*pi/180)*sin(SunDeclineDeg*pi/180)+cos(Latitude*pi/180)*cos(SunDeclineDeg*pi/180)*cos((t*360+EqOfTimeMinutes/4+Longitude+180)*pi/180)))*180/pi
   return(90-(acos(A+B*cos((t*360+C+180)*pi/180)))*180/pi)
+    
 }
 elevation(.5,0,0,2008,1)
 
-t = seq(0,1,.01)
-plot(t,elevation(t,0,0,2008,1),type = "l")
+t = seq(0,1,.0001)
+ggplot(data = NULL, aes(x = t*24, y = elevation(t,-60,0,2008,1)))+
+  coord_cartesian(ylim = c(-10,90))+
+  geom_line()
+            
+ggplot(data = NULL, aes(x = 24*t, y = sin(elevation(t,-60,0,2008,1)*pi/180)))+
+  coord_cartesian(ylim = c(-.1,1))+
+  geom_line()
+
+ggplot(data = NULL, aes(x = t*24, y = elevation(t,0,0,2008,78)/90, col = "elevation"))+
+  coord_cartesian(ylim = c(-.1,1))+
+  geom_line()+
+  geom_line(data = NULL, aes(x = 24*t, y = sin(elevation(t,0,0,2008,78)*pi/180), col = "sin(elevation)"))
+
