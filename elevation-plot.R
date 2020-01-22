@@ -48,19 +48,44 @@ elevation = function(t,Latitude,Longitude,year,day){
   return(90-(acos(A+B*cos((t*360+C+180)*pi/180)))*180/pi)
     
 }
+
 elevation(.5,0,0,2008,1)
 
-t = seq(0,1,.0001)
-ggplot(data = NULL, aes(x = t*24, y = elevation(t,-60,0,2008,1)))+
+t = seq(0,1,1/(8*100))
+ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,-60,0,2008,1)))+
   coord_cartesian(ylim = c(-10,90))+
-  geom_line()
+  geom_line()+
+  scale_x_time()
             
-ggplot(data = NULL, aes(x = 24*t, y = sin(elevation(t,-60,0,2008,1)*pi/180)))+
-  coord_cartesian(ylim = c(-.1,1))+
-  geom_line()
-
-ggplot(data = NULL, aes(x = t*24, y = elevation(t,0,0,2008,78)/90, col = "elevation"))+
+ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,-60,0,2008,1)*pi/180)))+
   coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
-  geom_line(data = NULL, aes(x = 24*t, y = sin(elevation(t,0,0,2008,78)*pi/180), col = "sin(elevation)"))
+  scale_x_time()
+
+ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,0,0,2008,78)/90, col = "elevation"))+
+  coord_cartesian(ylim = c(-.1,1))+
+  geom_line()+
+  geom_line(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,0,0,2008,78)*pi/180), col = "sin(elevation)"))+
+  labs()+
+  scale_x_time()
+
+
+###Creating projections from each observation
+
+###Max PAR: .487*1361/sin(elevation)
+library(tidyverse)
+time = c(0,1/8,2/8,3/8,4/8,5/8,6/8,7/8)
+observations = tibble(time, elevation(time,Latitude,Longitude,year,day))
+observations = observations %>%
+  select(time, elevation = `elevation(time, Latitude, Longitude, year, day)`)
+
+daylightObservations = observations %>%
+  mutate(max_PAR = .487*1361*sin(elevation*pi/180)) %>%
+  filter(elevation>0)
+
+ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
+  #coord_cartesian(ylim = c(-.1,1))+
+  geom_line()+
+  scale_x_time()+
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361)))
 
