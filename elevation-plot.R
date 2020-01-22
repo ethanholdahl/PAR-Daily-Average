@@ -5,7 +5,8 @@ Longitude = 0
 year = 2008
 day = 78
 t=.5
-
+Sunrise = 0 #initializing for global assignment
+Sunset = 0 #initializing for global assignment
 
 elevation = function(t,Latitude,Longitude,year,day){
   #Converting the year and day to Julian Day and Century. 2454466.5 is
@@ -39,8 +40,8 @@ elevation = function(t,Latitude,Longitude,year,day){
   B = cos(Latitude*pi/180)*cos(SunDeclineDeg*pi/180);
 
   SolarNoon = (720-4*Longitude-EqOfTimeMinutes+0*60)/1440;
-  Sunrise = ((SolarNoon*1440-HASunriseDeg*4)/1440)%%1 #keep sunrise positive and between zero and 1
-  Sunset = Sunrise+SunlightDuration;
+  assign("Sunrise", ((SolarNoon*1440-HASunriseDeg*4)/1440)%%1, envir = .GlobalEnv); #keep sunrise positive and between zero and 1
+  assign("Sunset", Sunrise+SunlightDuration, envir = .GlobalEnv); #assign SR/SS to global for use in other functions
 
   C = EqOfTimeMinutes/4+Longitude;
 
