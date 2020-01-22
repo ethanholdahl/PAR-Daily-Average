@@ -96,6 +96,12 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
 wangInstPAR = function(t, daylightObservationsTibble){
   if (dim(daylightObservationsTibble)[1]==1){
     #I use equation 6.2
-    daylightObservationsTibble[1,1]
-  }
+    overpass = daylightObservationsTibble[1,1]
+    PAR = daylightObservationsTibble[1,3]
+    instPAR = PAR*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass-Sunrise)*pi/(Sunset-Sunrise)))
+    #add PAR = 0 for before sunrise and after sunset
+    return(instPAR)
+  } 
+  #2 or more observations: I use equation 6.4
+  
 }
