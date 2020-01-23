@@ -71,6 +71,9 @@ ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,
   scale_x_time()
 
 
+
+
+
 ###Creating projections from each observation
 
 #Max PAR: .487*1361/sin(elevation)
@@ -78,7 +81,7 @@ library(tidyverse)
 
 time = c(0,1/8,2/8,3/8,4/8,5/8,6/8,7/8)
 time = time+floor(Sunrise*8)/8
-observations = tibble(time, elevation(time,Latitude,Longitude,year,day))
+observations = tibble(time, elevation(time, Latitude, Longitude, year, day))
 observations = observations %>%
   select(time, elevation = `elevation(time, Latitude, Longitude, year, day)`)
 
@@ -86,11 +89,20 @@ daylightObservations = observations %>%
   mutate(max_PAR = .487*1361*sin(elevation*pi/180)) %>%
   filter(elevation>0)
 
+##add points to indicate Sunrise and Sunset
+timeSS = c(Sunrise, Sunset)
+observationsSS = tibble(timeSS, elevation(timeSS, Latitude, Longitude, year, day))
+observationsSS = observationsSS %>%
+  select(time = timeSS, elevation = `elevation(timeSS, Latitude, Longitude, year, day)`) %>%
+  mutate(max_PAR = .487*1361*sin(elevation*pi/180))
+
+
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   #coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   scale_x_time()+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361)))
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361)))+
+  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)))
 
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
