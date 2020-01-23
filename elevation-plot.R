@@ -1,9 +1,9 @@
 library(ggplot2)
-
+##Fix error for days with no positive elevation 
 Latitude = 0
-Longitude = 0
+Longitude = 120
 year = 2008
-day = 78
+day = 5
 t=.5
 Sunrise = 0 #initializing for global assignment
 Sunset = 0 #initializing for global assignment
@@ -50,23 +50,23 @@ elevation = function(t,Latitude,Longitude,year,day){
     
 }
 
-elevation(.5,0,0,2008,1)
+elevation(t,Latitude,Longitude,year,day)
 
 t = seq(0,1,1/(8*100))
-ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,-60,0,2008,1)))+
+ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,Latitude,Longitude,year,day)))+
   coord_cartesian(ylim = c(-10,90))+
   geom_line()+
   scale_x_time()
             
-ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,-60,0,2008,1)*pi/180)))+
+ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   scale_x_time()
 
-ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,0,0,2008,78)/90, col = "elevation"))+
+ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,day)/90, col = "elevation"))+
   coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
-  geom_line(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,0,0,2008,78)*pi/180), col = "sin(elevation)"))+
+  geom_line(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), col = "sin(elevation)"))+
   labs()+
   scale_x_time()
 
@@ -93,15 +93,23 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
+
+#SHIFT SO t STARTS before SR
 wangInstPAR = function(t, daylightObservationsTibble){
-  if (dim(daylightObservationsTibble)[1]==1){
-    #I use equation 6.2
+  if (t<Sunrise){
+    return(0)
+  } else if (t>Sunset){
+    return(0)
+  } else if (dim(daylightObservationsTibble)[1]==1){
+    #1 observation: I use equation 6.2
     overpass = daylightObservationsTibble[1,1]
     PAR = daylightObservationsTibble[1,3]
     instPAR = PAR*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass-Sunrise)*pi/(Sunset-Sunrise)))
-    #add PAR = 0 for before sunrise and after sunset
     return(instPAR)
-  } 
-  #2 or more observations: I use equation 6.4
+  } else if (dim(daylightObservationsTibble)[1]>1){
+    #2 or more observations: I use equation 6.4
+    
+  }
+
   
 }
