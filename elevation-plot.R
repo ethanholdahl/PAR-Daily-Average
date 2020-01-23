@@ -52,7 +52,7 @@ elevation = function(t,Latitude,Longitude,year,day){
 
 elevation(t,Latitude,Longitude,year,day)
 
-t = seq(0,1,1/(8*100))
+t = seq(Sunrise-1/8,Sunset+1/8,1/(8*100))
 ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,Latitude,Longitude,year,day)))+
   coord_cartesian(ylim = c(-10,90))+
   geom_line()+
@@ -75,7 +75,9 @@ ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,
 
 #Max PAR: .487*1361/sin(elevation)
 library(tidyverse)
+
 time = c(0,1/8,2/8,3/8,4/8,5/8,6/8,7/8)
+time = time+floor(Sunrise*8)/8
 observations = tibble(time, elevation(time,Latitude,Longitude,year,day))
 observations = observations %>%
   select(time, elevation = `elevation(time, Latitude, Longitude, year, day)`)
@@ -94,7 +96,6 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
 
-#SHIFT SO t STARTS before SR
 wangInstPAR = function(t, daylightObservationsTibble){
   if (t<Sunrise){
     return(0)
