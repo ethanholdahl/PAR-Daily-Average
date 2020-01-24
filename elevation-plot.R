@@ -113,23 +113,78 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
 
-wangInstPAR = function(t, daylightObservationsTibble){
-  if (elevation(t, Latitude, Longitude, year, day)<=0){
+wangInstPAR = function(t, daylightObservations){
+  l = dim(daylightObservations)[1]
+  if (t < Sunrise){
     return(0)
-  } else if (dim(daylightObservationsTibble)[1]==1){
+    } else if (t > Sunset){
+    return(0)
+    } else if (l==1){
     #1 observation: I use equation 6.2
-    overpass = daylightObservationsTibble[1,1]
-    PAR = daylightObservationsTibble[1,3]
+    overpass = daylightObservations[1,1]
+    PAR = daylightObservations[1,3]
     instPAR = PAR*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass-Sunrise)*pi/(Sunset-Sunrise)))
-    return(instPAR)
-  } else if (dim(daylightObservationsTibble)[1]>1){
-    
+  } else if (l>1){
     #2 or more observations: I use equation 6.4
-    
+    if (t < daylightObservations[1,1]){
+      overpass = daylightObservations[1,1]
+      PAR = daylightObservations[1,3]
+      instPAR = PAR*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass-Sunrise)*pi/(Sunset-Sunrise)))
+    } else if (t > daylightObservations[l,1]){
+      overpass = daylightObservations[l,1]
+      PAR = daylightObservations[l,3]
+      instPAR = PAR*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass-Sunrise)*pi/(Sunset-Sunrise)))
+    } else {
+      for (o in 2:l){
+        if (t < daylightObservations[o,1]){
+          overpass2 = daylightObservations[o,1]
+          overpass1 = daylightObservations[o-1,1]
+          PAR2 = daylightObservations[o,3]
+          PAR1 = daylightObservations[o-1,3]
+          instPAR = (overpass2-t)/(overpass2-overpass1)*(PAR1*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass1-Sunrise)*pi/(Sunset-Sunrise))))+
+            (t-overpass1)/(overpass2-overpass1)*(PAR2*(sin((t-Sunrise)*pi/(Sunset-Sunrise))/sin((overpass2-Sunrise)*pi/(Sunset-Sunrise))))
+        }
+      }
+    }
   }
-
-  
+  return(as.numeric(instPAR))
 }
+
+
+#remove if functions from wangInstPAR
+
+wangt = tibble(t) %>%
+  mutate(out = t < Sunrise | t > Sunset,
+         obs1 = t > Sunrise & t < as.numeric(daylightObservations),
+         obs2 = t >= as.numeric(daylightObservations),
+         PAR1 = 0,
+         PAR2 = 0,
+         number = (t-Sunrise+1/8)*800+1)
+test = wangt %>%
+  filter(t > Sunrise & t < as.numeric(daylightObservations[1,1])) %>%
+  mutate(obs1 = 1, obs2 = 1)
+  
+wangt$number==test
+ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t, Latitude, Longitude, year, day)*pi/180)))+
+  #coord_cartesian(ylim = c(-.1,1))+
+  geom_line()+
+  #geom_vline(xintercept = 1:3, data =  ,aes())+
+  scale_x_time()+
+  geom_line(data = NULL, aes(x = t*24*60*60, y = wangInstPAR(t)))+
+  scale_color_viridis_c(option = "C")+
+  #(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
+  #scale_color_viridis_c(option = "C")+
+  geom_point(data = observationsSS, aes(x = t*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
+  theme_minimal()
+
+wangt %>%
+  filter(t < 1)
+
+elevation(t, Latitude, Longitude, year, day)
+
+
+daylightObservations[1,1]
+
 ##create sky based on instPAR percentage of max and raw value (black at night, blue-gray during high-low par/high sun, red at sunset)
 
 sky = tibble(t)
