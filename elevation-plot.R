@@ -108,7 +108,7 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
   theme_minimal()
   
-
+#add SR/SS to daylight obs?
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
