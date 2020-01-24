@@ -89,6 +89,9 @@ daylightObservations = observations %>%
   mutate(max_PAR = .487*1361*sin(elevation*pi/180)) %>%
   filter(elevation>0)
 
+daylightObservations = daylightObservations %>%
+  mutate(percentMax = max_PAR/max_PAR)
+  
 ##add points to indicate Sunrise and Sunset
 timeSS = c(Sunrise, Sunset)
 observationsSS = tibble(timeSS, elevation(timeSS, Latitude, Longitude, year, day))
@@ -96,13 +99,15 @@ observationsSS = observationsSS %>%
   select(time = timeSS, elevation = `elevation(timeSS, Latitude, Longitude, year, day)`) %>%
   mutate(max_PAR = .487*1361*sin(elevation*pi/180))
 
-
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   #coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   scale_x_time()+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361)))+
-  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)))
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
+  scale_color_viridis_c(option = "C")+
+  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
+  theme_minimal()
+  
 
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
@@ -126,3 +131,19 @@ wangInstPAR = function(t, daylightObservationsTibble){
 
   
 }
+##create sky based on instPAR percentage of max and raw value (black at night, blue-gray during high-low par/high sun, red at sunset)
+
+sky = tibble(t)
+
+# t[101]=Sunrise
+#Sunset = length-100
+
+ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
+  #coord_cartesian(ylim = c(-.1,1))+
+  geom_line()+
+  geom_vline(xintercept = 1:3, data =  ,aes())+
+  scale_x_time()+
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
+  scale_color_viridis_c(option = "C")+
+  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
+  theme_minimal()
