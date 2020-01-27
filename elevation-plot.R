@@ -1,5 +1,4 @@
 library(ggplot2)
-##Fix error for days with no positive elevation 
 Latitude = -80
 Longitude = 0
 year = 2008
@@ -33,7 +32,15 @@ elevation = function(t,Latitude,Longitude,year,day){
   ## Define maximum PAR ratio: Solar Constant*.487(%of radiation that makes up PAR)*scale(100)/Sin(90)
   MaxRatio=.487*1361*100;
   srssangle = 90;
-  HASunriseDeg = Re(180/pi*(acos(cos(pi/180*(srssangle))/(cos(pi/180*(Latitude))*cos(pi/180*(SunDeclineDeg)))-tan(pi/180*(Latitude))*tan(pi/180*(SunDeclineDeg)))));
+  HAval = cos(pi/180*(srssangle))/(cos(pi/180*(Latitude))*cos(pi/180*(SunDeclineDeg)))-tan(pi/180*(Latitude))*tan(pi/180*(SunDeclineDeg));
+  if (HAval <= -1){
+    HASunriseDeg = 180
+  } else if (HAval >= 1) {
+    HASunriseDeg = 0
+  } else {
+    HASunriseDeg = 180/pi*acos(HAval)
+  }
+  #HASunriseDeg = 180/pi*(acos(cos(pi/180*(srssangle))/(cos(pi/180*(Latitude))*cos(pi/180*(SunDeclineDeg)))-tan(pi/180*(Latitude))*tan(pi/180*(SunDeclineDeg))));
   SunlightDuration = HASunriseDeg/180;
 
   A = sin(Latitude*pi/180)*sin(SunDeclineDeg*pi/180);
@@ -80,14 +87,14 @@ ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,
 library(tidyverse)
 
 time = c(0,1/8,2/8,3/8,4/8,5/8,6/8,7/8)
-time = time+floor(Sunrise*8)/8
+time = time+ceiling(Sunrise*8)/8
 observations = tibble(time, elevation(time, Latitude, Longitude, year, day))
 observations = observations %>%
   select(time, elevation = `elevation(time, Latitude, Longitude, year, day)`)
 
 daylightObservations = observations %>%
   mutate(max_PAR = .487*1361*sin(elevation*pi/180)) %>%
-  filter(elevation>0)
+  filter(time < Sunset)
 
 daylightObservations = daylightObservations %>%
   mutate(percentMax = max_PAR/max_PAR)
