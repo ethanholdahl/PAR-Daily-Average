@@ -321,15 +321,21 @@ wangInstPAR = function(t, daylightObservations){
 }
 
 wangPercentMax = function(t, daylightObservations){
-  wangPercentMaxt = tibble(wangt$instPAR)
-  
+  wangPercentMaxt = tibble(wangInstPAR(t, daylightObservations)) %>%
+    select(InstPAR = 'wangInstPAR(t, daylightObservations)') %>%
+    mutate(t = t,
+           elevation = elevation(t, Latitude, Longitude, year, day),
+           maxPAR = sin(elevation*pi/180)*.487*1361)
+  wangPercentMaxt = wangPercentMaxt %>%
+    mutate(percentMax = InstPAR/maxPAR)
+  return(wangPercentMaxt$percentMax)
 }
 
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   #coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   scale_x_time()+
-  geom_line(data = NULL, aes(x = 24*60*60*t, y = wangInstPAR(t, daylightObservations)/(.487*1361), color = ))+
+  geom_line(data = NULL, aes(x = 24*60*60*t, y = wangInstPAR(t, daylightObservations)/(.487*1361), color = wangPercentMax(t, daylightObservations)))+
   geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
   scale_color_viridis_c(option = "C")+
   geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
