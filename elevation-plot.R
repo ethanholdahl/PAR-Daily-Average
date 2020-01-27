@@ -1,8 +1,8 @@
 library(ggplot2)
 Latitude = -80
 Longitude = 0
-year = 2008
-day = 5
+year = 2020
+day = 27
 t=.5
 Sunrise = 0 #initializing for global assignment
 Sunset = 0 #initializing for global assignment
@@ -88,77 +88,75 @@ observations = observations %>%
   select(time, elevation = `elevation(time, Latitude, Longitude, year, day)`)
 
 daylightObservations = observations %>%
-  mutate(max_PAR = .487*1361*sin(elevation*pi/180)) %>%
+  mutate(maxPAR = .487*1361*sin(elevation*pi/180)) %>%
   filter(time < Sunset)
 
 daylightObservations = daylightObservations %>%
-  mutate(percentMax = max_PAR/max_PAR)
+  mutate(PAR = runif(dim(daylightObservations)[1], min = 0, max = 1)*maxPAR)
+
+daylightObservations = daylightObservations %>%
+  mutate(percentMax = PAR/maxPAR)
   
-##add points to indicate Sunrise and Sunset
+##add vector to indicate Sunrise and Sunset
 timeSS = c(Sunrise, Sunset)
-observationsSS = tibble(timeSS, elevation(timeSS, Latitude, Longitude, year, day))
-observationsSS = observationsSS %>%
-  select(time = timeSS, elevation = `elevation(timeSS, Latitude, Longitude, year, day)`) %>%
-  mutate(max_PAR = .487*1361*sin(elevation*pi/180))
 
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   #coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   scale_x_time()+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
-  scale_color_viridis_c(option = "C")+
-  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = percentMax))+
+  scale_color_viridis_c(option = "C", limits = c(0,1))+
+  geom_vline(xintercept = timeSS*24*60*60 , color = 8)+
   theme_minimal()
-
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
 wangInstPAR = function(t, daylightObservations){
   l = dim(daylightObservations)[1]
   if (l == 0){
-    return(0)
+    return(rep(0,length(t)))
   }
   wangt = tibble(t) %>%
     mutate(notInDay = t < Sunrise | t > Sunset)
   if (l >= 1){
     wangt = wangt %>%
       mutate(overpass1 = as.numeric(daylightObservations[1,1]),
-             PAR1 = as.numeric(daylightObservations[1,3]))
+             PAR1 = as.numeric(daylightObservations[1,4]))
   }
   if (l >= 2){
     wangt = wangt %>%
       mutate(overpass2 = as.numeric(daylightObservations[2,1]),
-             PAR2 = as.numeric(daylightObservations[2,3]))
+             PAR2 = as.numeric(daylightObservations[2,4]))
   }
   if (l >= 3){
     wangt = wangt %>%
       mutate(overpass3 = as.numeric(daylightObservations[3,1]),
-             PAR3 = as.numeric(daylightObservations[3,3]))
+             PAR3 = as.numeric(daylightObservations[3,4]))
   }
   if (l >= 4){
     wangt = wangt %>%
       mutate(overpass4 = as.numeric(daylightObservations[4,1]),
-             PAR4 = as.numeric(daylightObservations[4,3]))
+             PAR4 = as.numeric(daylightObservations[4,4]))
   }
   if (l >= 5){
     wangt = wangt %>%
       mutate(overpass5 = as.numeric(daylightObservations[5,1]),
-             PAR5 = as.numeric(daylightObservations[5,3]))
+             PAR5 = as.numeric(daylightObservations[5,4]))
   }
   if (l >= 6){
     wangt = wangt %>%
       mutate(overpass6 = as.numeric(daylightObservations[6,1]),
-             PAR6 = as.numeric(daylightObservations[6,3]))
+             PAR6 = as.numeric(daylightObservations[6,4]))
   }
   if (l >= 7){
     wangt = wangt %>%
       mutate(overpass7 = as.numeric(daylightObservations[7,1]),
-             PAR7 = as.numeric(daylightObservations[7,3]))
+             PAR7 = as.numeric(daylightObservations[7,4]))
   }
   if (l >= 8){
     wangt = wangt %>%
       mutate(overpass8 = as.numeric(daylightObservations[8,1]),
-             PAR8 = as.numeric(daylightObservations[8,3]))
+             PAR8 = as.numeric(daylightObservations[8,4]))
   }
   
   # create index and initialize instPAR column
@@ -331,18 +329,18 @@ wangPercentMax = function(t, daylightObservations){
   return(wangPercentMaxt$percentMax)
 }
 
+
+
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   #coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   scale_x_time()+
   geom_line(data = NULL, aes(x = 24*60*60*t, y = wangInstPAR(t, daylightObservations)/(.487*1361), color = wangPercentMax(t, daylightObservations)))+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
-  scale_color_viridis_c(option = "C")+
-  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = percentMax))+
+  scale_color_viridis_c(option = "C", limits = c(0,1))+
+  geom_vline(xintercept = timeSS*24*60*60, color = 8)+
   theme_minimal()
 
-
-daylightObservations[1,1]
 
 ##create sky based on instPAR percentage of max and raw value (black at night, blue-gray during high-low par/high sun, red at sunset)
 
