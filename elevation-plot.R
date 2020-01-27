@@ -40,7 +40,6 @@ elevation = function(t,Latitude,Longitude,year,day){
   } else {
     HASunriseDeg = 180/pi*acos(HAval)
   }
-  #HASunriseDeg = 180/pi*(acos(cos(pi/180*(srssangle))/(cos(pi/180*(Latitude))*cos(pi/180*(SunDeclineDeg)))-tan(pi/180*(Latitude))*tan(pi/180*(SunDeclineDeg))));
   SunlightDuration = HASunriseDeg/180;
 
   A = sin(Latitude*pi/180)*sin(SunDeclineDeg*pi/180);
@@ -52,7 +51,6 @@ elevation = function(t,Latitude,Longitude,year,day){
 
   C = EqOfTimeMinutes/4+Longitude;
 
-  #90-(acos(sin(Latitude*pi/180)*sin(SunDeclineDeg*pi/180)+cos(Latitude*pi/180)*cos(SunDeclineDeg*pi/180)*cos((t*360+EqOfTimeMinutes/4+Longitude+180)*pi/180)))*180/pi
   return(90-(acos(A+B*cos((t*360+C+180)*pi/180)))*180/pi)
     
 }
@@ -76,9 +74,6 @@ ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,
   geom_line(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), col = "sin(elevation)"))+
   labs()+
   scale_x_time()
-
-
-
 
 
 ###Creating projections from each observation
@@ -114,8 +109,7 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   scale_color_viridis_c(option = "C")+
   geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
   theme_minimal()
-  
-#add SR/SS to daylight obs?
+
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
