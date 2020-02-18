@@ -1,6 +1,6 @@
 library(ggplot2)
-Latitude = 0
-Longitude = 120
+Latitude = -70
+Longitude = 0
 year = 2020
 day = 27
 t=.5
@@ -55,7 +55,6 @@ elevation = function(t, Latitude, Longitude, year, day){
   
 }
 
-elevation(t, Latitude, Longitude, year, day)
 
 precision = 100
 
@@ -101,11 +100,10 @@ observations = time_ele_PAR %>%
   filter(observation==TRUE)
 
 ##add vector to indicate Sunrise and Sunset times
-elevation(Sunrise, Latitude, Longitude, day, year)
 
 SS_time = c(Sunrise, Sunset, Sunrise+1, (Sunset+1)%%2)
 SS_time = sort(SS_time)
-SS_ele = round(elevation(SS_time, Latitude, Longitude, day, year), digits = 4)
+SS_ele = round(elevation(SS_time, Latitude, Longitude, year, day), digits = 4)
 
 SS = tibble(time = SS_time, elevation = SS_ele) %>%
   mutate(real = elevation == 0,
@@ -131,8 +129,6 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   theme_minimal()
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
-
-observations$PAR
 
 time_ele_PAR = time_ele_PAR %>%
   mutate(wang_i_obs1 = floor(t*8),
@@ -169,255 +165,56 @@ add_SS = function(SS, time_ele_PAR) {
 time_ele_PAR = add_SS(SS,time_ele_PAR)
 
 
-time_ele_PAR = time_ele_PAR %>%
-  mutate(wang_i_PAR1 = observations$PAR[time_ele_PAR$wang_i_obs1+1],
-         wang_i_PAR2 = observations$PAR[time_ele_PAR$wang_i_obs2+1])
 
 time_ele_PAR = time_ele_PAR %>%
-  mutate(wang_PAR = wang_i_PAR1+wang_i_PAR2)
+  mutate(
+    wang_i_PAR1 = wang_index$PAR[time_ele_PAR$wang_i_obs1 + 1],
+    wang_i_PAR2 = wang_index$PAR[time_ele_PAR$wang_i_obs2 + 1],
+    wang_i_time1 = wang_index$time[time_ele_PAR$wang_i_obs1 + 1],
+    wang_i_time2 = wang_index$time[time_ele_PAR$wang_i_obs2 + 1],
+    wang_i_sunrise1 = time>((Sunrise+Sunset-1)/2),
+    wang_i_sunrise2 = time>((Sunrise+Sunset+1)/2),
+    wang_i_sunrise3 = time>((Sunrise+Sunset+3)/2),
+    wang_i_dayduration = Sunset-Sunrise
+  )
 
-a = time_ele_PAR$time*8-floor(time_ele_PAR$time*8)
-(1-a)*time_ele_PAR$wang_i_PAR1+a*time_ele_PAR$wang_i_PAR2
+time_ele_PAR = time_ele_PAR %>%
+  mutate(wang_i_sunrise = wang_i_sunrise1 + wang_i_sunrise2 + wang_i_sunrise3 + Sunrise - 1) %>%
+  select(-wang_i_sunrise1, -wang_i_sunrise2, -wang_i_sunrise3)
 
-(wangt$overpass2-wangt$t)/(wangt$overpass2-wangt$overpass1)*(wangt$PAR1*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass1-Sunrise)*pi/(Sunset-Sunrise))))+
-            (wangt$t-wangt$overpass1)/(wangt$overpass2-wangt$overpass1)*(wangt$PAR2*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass2-Sunrise)*pi/(Sunset-Sunrise))))
+time_ele_PAR = time_ele_PAR %>%
+  mutate(
+    wang_PAR = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR1 * (sin((time - wang_i_sunrise) *
+                                                                                             pi / (wang_i_dayduration)
+    ) / sin((wang_i_time1 - wang_i_sunrise) * pi / (wang_i_dayduration)
+    ))) +
+      (time - wang_i_time1) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR2 *
+                                                                 (sin((time - wang_i_sunrise) * pi / (Sunset - Sunrise)
+                                                                 ) / sin((wang_i_time2 - wang_i_sunrise) * pi / (wang_i_dayduration)
+                                                                 )))
+  )
 
+i = time_ele_PAR %>%
+  filter(observation == TRUE) %>%
+  select(time) %>%
+  as_vector() %>%
+  '*'(800) + 1
 
-time_ele_PAR %>%
-  mutate(wang_i_PAR1 = observations$PAR[time_ele_PAR$wang_i_obs1]
-  mutate(wang_PAR = )
+time_ele_PAR$wang_PAR[i] = time_ele_PAR$PAR[i] 
+rm(i)
 
-a=observations$PAR[time_ele_PAR$wang_i_obs1]
-
-
-wangInstPAR = function(t, daylightObservations){
-  l = dim(daylightObservations)[1]
-  if (l == 0){
-    return(rep(0,length(t)))
-  }
-  wangt = tibble(t) %>%
-    mutate(notInDay = t < Sunrise | t > Sunset)
-  if (l >= 1){
-    wangt = wangt %>%
-      mutate(overpass1 = as.numeric(daylightObservations[1,1]),
-             PAR1 = as.numeric(daylightObservations[1,4]))
-  }
-  if (l >= 2){
-    wangt = wangt %>%
-      mutate(overpass2 = as.numeric(daylightObservations[2,1]),
-             PAR2 = as.numeric(daylightObservations[2,4]))
-  }
-  if (l >= 3){
-    wangt = wangt %>%
-      mutate(overpass3 = as.numeric(daylightObservations[3,1]),
-             PAR3 = as.numeric(daylightObservations[3,4]))
-  }
-  if (l >= 4){
-    wangt = wangt %>%
-      mutate(overpass4 = as.numeric(daylightObservations[4,1]),
-             PAR4 = as.numeric(daylightObservations[4,4]))
-  }
-  if (l >= 5){
-    wangt = wangt %>%
-      mutate(overpass5 = as.numeric(daylightObservations[5,1]),
-             PAR5 = as.numeric(daylightObservations[5,4]))
-  }
-  if (l >= 6){
-    wangt = wangt %>%
-      mutate(overpass6 = as.numeric(daylightObservations[6,1]),
-             PAR6 = as.numeric(daylightObservations[6,4]))
-  }
-  if (l >= 7){
-    wangt = wangt %>%
-      mutate(overpass7 = as.numeric(daylightObservations[7,1]),
-             PAR7 = as.numeric(daylightObservations[7,4]))
-  }
-  if (l >= 8){
-    wangt = wangt %>%
-      mutate(overpass8 = as.numeric(daylightObservations[8,1]),
-             PAR8 = as.numeric(daylightObservations[8,4]))
-  }
-  
-  # create index and initialize instPAR column
-  wangt = wangt %>%
-    mutate(instPAR = round((t-Sunrise+1/8)*800+1))
-  
-  #identify times before sunrise
-  group = wangt %>%
-    filter(t<=Sunrise) %>%
-    select(instPAR)
-  #set instPAR equal to 0.
-  wangt$instPAR[group$instPAR] = 0
-  
-  #identify times after sunset
-  group = wangt %>%
-    filter(t>= Sunset) %>%
-    select(instPAR)
-  #set instPAR equal to 0.
-  wangt$instPAR[group$instPAR] = 0
-  
-  if (l >= 1){
-    #identify times between sunrise and first observation
-    group = wangt %>%
-      filter(t>Sunrise & t<=overpass1) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR1*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass1-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  }
-  
-  if (l >= 2){
-    #identify times between first and second observation
-    group = wangt %>%
-      filter(t>overpass1 & t<=overpass2) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass2-wangt$t)/(wangt$overpass2-wangt$overpass1)*(wangt$PAR1*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass1-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass1)/(wangt$overpass2-wangt$overpass1)*(wangt$PAR2*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass2-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  if (l >= 3){
-    #identify times between second and third observation
-    group = wangt %>%
-      filter(t>overpass2 & t<=overpass3) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass3-wangt$t)/(wangt$overpass3-wangt$overpass2)*(wangt$PAR2*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass2-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass2)/(wangt$overpass3-wangt$overpass2)*(wangt$PAR3*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass3-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  if (l >= 4){
-    #identify times between third and forth observation
-    group = wangt %>%
-      filter(t>overpass3 & t<=overpass4) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass4-wangt$t)/(wangt$overpass4-wangt$overpass3)*(wangt$PAR3*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass3-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass3)/(wangt$overpass4-wangt$overpass3)*(wangt$PAR4*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass4-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  if (l >= 5){
-    #identify times between forth and fifth observation
-    group = wangt %>%
-      filter(t>overpass4 & t<=overpass5) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass5-wangt$t)/(wangt$overpass5-wangt$overpass4)*(wangt$PAR4*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass4-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass4)/(wangt$overpass5-wangt$overpass4)*(wangt$PAR5*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass5-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  if (l >= 6){
-    #identify times between fifth and sixth observation
-    group = wangt %>%
-      filter(t>overpass5 & t<=overpass6) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass6-wangt$t)/(wangt$overpass6-wangt$overpass5)*(wangt$PAR5*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass5-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass5)/(wangt$overpass6-wangt$overpass5)*(wangt$PAR6*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass6-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  if (l >= 7){
-    #identify times between sixth and seventh observation
-    group = wangt %>%
-      filter(t>overpass6 & t<=overpass7) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass7-wangt$t)/(wangt$overpass7-wangt$overpass6)*(wangt$PAR6*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass6-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass6)/(wangt$overpass7-wangt$overpass6)*(wangt$PAR7*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass7-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  if (l >= 8){
-    #identify times between seventh and eigth observation
-    group = wangt %>%
-      filter(t>overpass7 & t<=overpass8) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.4)
-    wangt$instPAR[group$instPAR] = as_vector((wangt$overpass8-wangt$t)/(wangt$overpass8-wangt$overpass7)*(wangt$PAR7*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass7-Sunrise)*pi/(Sunset-Sunrise))))+
-                                               (wangt$t-wangt$overpass7)/(wangt$overpass8-wangt$overpass7)*(wangt$PAR8*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass8-Sunrise)*pi/(Sunset-Sunrise)))))[group$instPAR]
-  }
-  
-  #find last observation before Sunset
-  if (l == 1){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass1 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR1*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass1-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 2){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass2 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR2*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass2-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 3){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass3 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR3*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass3-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 4){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass4 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR4*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass4-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 5){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass5 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR5*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass5-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 6){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass6 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR6*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass6-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 7){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass7 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR7*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass7-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  } else if (l == 8){
-    #identify times between last observation and Sunset
-    group = wangt %>%
-      filter(t>overpass8 & t<=Sunset) %>%
-      select(instPAR)
-    #calculate instPAR (eq. 6.2)
-    wangt$instPAR[group$instPAR] = as_vector(wangt$PAR8*(sin((wangt$t-Sunrise)*pi/(Sunset-Sunrise))/sin((wangt$overpass8-Sunrise)*pi/(Sunset-Sunrise))))[group$instPAR]
-  }
-  
-  return(wangt$instPAR)
-}
-
-wangPercentMax = function(t, daylightObservations){
-  wangPercentMaxt = tibble(wangInstPAR(t, daylightObservations)) %>%
-    select(InstPAR = 'wangInstPAR(t, daylightObservations)') %>%
-    mutate(t = t,
-           elevation = elevation(t, Latitude, Longitude, year, day),
-           maxPAR = sin(elevation*pi/180)*.487*1361)
-  wangPercentMaxt = wangPercentMaxt %>%
-    mutate(percentMax = InstPAR/maxPAR)
-  return(wangPercentMaxt$percentMax)
-}
+time_ele_PAR = time_ele_PAR %>%
+  mutate(wang_percent = wang_PAR/maxPAR) 
 
 
-
-ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
-  #coord_cartesian(ylim = c(-.1,1))+
-  geom_line()+
-  scale_x_time()+
-  geom_line(data = NULL, aes(x = 24*60*60*t, y = wangInstPAR(t, daylightObservations)/(.487*1361), color = wangPercentMax(t, daylightObservations)))+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = percentMax))+
-  scale_color_viridis_c(option = "C", limits = c(0,1))+
-  geom_vline(xintercept = timeSS*24*60*60, color = 8)+
+ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
+  #coord_cartesian(ylim = c(-.1,1)) +
+  geom_line() +
+  scale_x_time() +
+  geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_percent)) +
+  geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = percentMax)) +
+  scale_color_viridis_c(option = "C", limits = c(0,1)) +
+  geom_vline(data = SS, aes(xintercept = time*24*60*60, color = 8)) +
   theme_minimal()
 
 
@@ -443,3 +240,24 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
   theme_minimal()
 
+
+
+time_ele_PAR = time_ele_PAR %>%
+  mutate(
+    wang_i_PAR1 = wang_index$PAR[time_ele_PAR$wang_i_obs1 + 1],
+    wang_i_PAR2 = wang_index$PAR[time_ele_PAR$wang_i_obs2 + 1],
+    wang_i_time1 = wang_index$time[time_ele_PAR$wang_i_obs1 + 1],
+    wang_i_time2 = wang_index$time[time_ele_PAR$wang_i_obs2 + 1]
+  )
+
+
+a = time_ele_PAR 
+
+(a$wang_i_time2 - a$time) / (a$wang_i_time2 - a$wang_i_time1) * (a$wang_i_PAR1 * (sin((a$time - Sunrise) *
+                                                                              pi / (Sunset - Sunrise)
+) / sin((a$wang_i_time1 - Sunrise) * pi / (Sunset - Sunrise)
+))) +
+  (time - a$wang_i_time1) / (a$wang_i_time2 - a$wang_i_time1) * (a$wang_i_PAR2 *
+                                                             (sin((a$time - Sunrise) * pi / (Sunset - Sunrise)
+                                                             ) / sin((a$wang_i_time2 - Sunrise) * pi / (Sunset - Sunrise)
+                                                             )))
