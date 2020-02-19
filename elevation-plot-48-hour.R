@@ -1,8 +1,8 @@
 library(ggplot2)
-Latitude = -70
-Longitude = 0
+Latitude = 29
+Longitude = -145
 year = 2020
-day = 27
+day = 213
 t=.5
 Sunrise = 0 #initializing for global assignment
 Sunset = 0 #initializing for global assignment
@@ -58,7 +58,7 @@ elevation = function(t, Latitude, Longitude, year, day){
 
 precision = 100
 
-t = seq(0,2,1/(8*precision))
+t = round(seq(0, 2, 1/(8*precision)), digits = 5)
 ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,Latitude,Longitude,year,day)))+
   coord_cartesian(ylim = c(-10,90))+
   geom_line()+
@@ -130,59 +130,49 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
 
 ###Creating a function that will plot the Wang et al. algorithm for each point
 
-time_ele_PAR = time_ele_PAR %>%
+
+
+add_wang(time_ele_PAR, SS) {
+  
+  
+  
+}
+
+
+wang_calculation = time_ele_PAR %>%
   mutate(wang_i_obs1 = floor(t*8),
          wang_i_obs2 = ceiling(t*8))
 
-
 SS = SS %>%
-  mutate(slot1 = floor(time*8),
-         slot2 = ceiling(time*8))
+  mutate(slot1f = ceiling(time*800+1),
+         slot1c = ceiling(slot1f/100)*100,
+         slot2c = floor(SS$time*800+1),
+         slot2f = floor(slot2c/100)*100+2)
 
-add_SS = function(SS, time_ele_PAR) {
-  for (i in 1:4) {
-    a = time_ele_PAR %>%
-      filter(observation == FALSE,
-             wang_i_obs1 == SS$slot1[i],
-             time > SS$time[i]) %>%
-      select(time) %>%
-      as_vector() %>%
-      '*'(800) + 1
-    time_ele_PAR$wang_i_obs1[a] = 16 + i
-    
-    b = time_ele_PAR %>%
-      filter(observation == FALSE,
-             wang_i_obs2 == SS$slot2[(5-i)],
-             time < SS$time[(5-i)]) %>%
-      select(time) %>%
-      as_vector() %>%
-      '*'(800) + 1
-    time_ele_PAR$wang_i_obs2[b] = 16 + (5 - i)
-  }
-  return(time_ele_PAR)
+
+for (i in 1:4) {
+  wang_calculation$wang_i_obs1[SS$slot1f[i]:SS$slot1c[i]] = 16 + i
+  wang_calculation$wang_i_obs2[SS$slot2f[i]:SS$slot2c[i]] = 16 + i
 }
 
-time_ele_PAR = add_SS(SS,time_ele_PAR)
 
-
-
-time_ele_PAR = time_ele_PAR %>%
+wang_calculation = wang_calculation %>%
   mutate(
-    wang_i_PAR1 = wang_index$PAR[time_ele_PAR$wang_i_obs1 + 1],
-    wang_i_PAR2 = wang_index$PAR[time_ele_PAR$wang_i_obs2 + 1],
-    wang_i_time1 = wang_index$time[time_ele_PAR$wang_i_obs1 + 1],
-    wang_i_time2 = wang_index$time[time_ele_PAR$wang_i_obs2 + 1],
+    wang_i_PAR1 = wang_index$PAR[wang_calculation$wang_i_obs1 + 1],
+    wang_i_PAR2 = wang_index$PAR[wang_calculation$wang_i_obs2 + 1],
+    wang_i_time1 = wang_index$time[wang_calculation$wang_i_obs1 + 1],
+    wang_i_time2 = wang_index$time[wang_calculation$wang_i_obs2 + 1],
     wang_i_sunrise1 = time>((Sunrise+Sunset-1)/2),
     wang_i_sunrise2 = time>((Sunrise+Sunset+1)/2),
     wang_i_sunrise3 = time>((Sunrise+Sunset+3)/2),
     wang_i_dayduration = Sunset-Sunrise
   )
 
-time_ele_PAR = time_ele_PAR %>%
+wang_calculation = wang_calculation %>%
   mutate(wang_i_sunrise = wang_i_sunrise1 + wang_i_sunrise2 + wang_i_sunrise3 + Sunrise - 1) %>%
   select(-wang_i_sunrise1, -wang_i_sunrise2, -wang_i_sunrise3)
 
-time_ele_PAR = time_ele_PAR %>%
+wang_calculation = wang_calculation %>%
   mutate(
     wang_PAR = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR1 * (sin((time - wang_i_sunrise) *
                                                                                              pi / (wang_i_dayduration)
@@ -194,16 +184,16 @@ time_ele_PAR = time_ele_PAR %>%
                                                                  )))
   )
 
-i = time_ele_PAR %>%
+i = wang_calculation %>%
   filter(observation == TRUE) %>%
   select(time) %>%
   as_vector() %>%
-  '*'(800) + 1
+  '*'(precision*8) + 1
 
-time_ele_PAR$wang_PAR[i] = time_ele_PAR$PAR[i] 
+wang_calculation$wang_PAR[i] = wang_calculation$PAR[i] 
 rm(i)
 
-time_ele_PAR = time_ele_PAR %>%
+wang_calculation = wang_calculation %>%
   mutate(wang_percent = wang_PAR/maxPAR) 
 
 
