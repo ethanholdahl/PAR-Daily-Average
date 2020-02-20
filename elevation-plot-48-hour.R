@@ -1,8 +1,8 @@
 library(ggplot2)
-Latitude = 29
-Longitude = -145
+Latitude = 44
+Longitude = -123
 year = 2020
-day = 213
+day = 50
 t=.5
 Sunrise = 0 #initializing for global assignment
 Sunset = 0 #initializing for global assignment
@@ -105,18 +105,11 @@ SS_time = c(Sunrise, Sunset, Sunrise+1, (Sunset+1)%%2)
 SS_time = sort(SS_time)
 SS_ele = round(elevation(SS_time, Latitude, Longitude, year, day), digits = 4)
 
+iSR = as.numeric(Sunrise>(Sunset+1)%%2)+1
+
 SS = tibble(time = SS_time, elevation = SS_ele) %>%
   mutate(real = elevation == 0,
          PAR = 0)
-
-wang_index = observations %>%
-  select(time, elevation, PAR)
-
-wang_index = SS %>%
-  select(time, elevation, PAR) %>%
-  rbind(wang_index, .)
-
-
 
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180))) +
   #coord_cartesian(ylim = c(-.1,1)) +
@@ -132,69 +125,140 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
 
 
 
-add_wang(time_ele_PAR, SS) {
+
+add_wang = function(time_ele_PAR, SS, observations) {
+  
+  wang_index = observations %>%
+    select(time, elevation, PAR)
+  
+  wang_index = SS %>%
+    select(time, elevation, PAR) %>%
+    rbind(wang_index, .)
+  
+  wang_calculation = time_ele_PAR %>%
+    mutate(wang_i_obs1 = floor(t * 8) + 1,
+           wang_i_obs2 = ceiling(t * 8) + 1)
+  
+  SS = SS %>%
+    mutate(
+      slot1f = ceiling(time * 8 * precision + 1),
+      slot1c = ceiling(slot1f / precision) * precision,
+      slot2c = floor(SS$time * 8 * precision + 1),
+      slot2f = floor(slot2c / precision) * precision + 2
+    )
+  
+  #fill obs 1 forward and obs 2 backwards (so obs 1 is the most recent and obs 2 in the soonest)
+  
+  for (i in 1:4) {
+    wang_calculation$wang_i_obs1[SS$slot1f[i]:SS$slot1c[i]] = 17 + i
+    wang_calculation$wang_i_obs2[SS$slot2f[5 - i]:SS$slot2c[5 - i]] = 17 + 5 - i
+  }
+  
+  
+  wang_calculation = wang_calculation %>%
+    mutate(
+      wang_i_PAR1 = wang_index$PAR[wang_calculation$wang_i_obs1],
+      wang_i_PAR2 = wang_index$PAR[wang_calculation$wang_i_obs2],
+      wang_i_time1 = wang_index$time[wang_calculation$wang_i_obs1],
+      wang_i_time2 = wang_index$time[wang_calculation$wang_i_obs2],
+      wang_i_sunrise1 = time > ((Sunrise + Sunset - 1) / 2),
+      wang_i_sunrise2 = time > ((Sunrise + Sunset + 1) / 2),
+      wang_i_sunrise3 = time > ((Sunrise + Sunset + 3) / 2),
+      wang_i_dayduration = Sunset - Sunrise
+    )
+  
+  wang_calculation = wang_calculation %>%
+    mutate(wang_i_sunrise = wang_i_sunrise1 + wang_i_sunrise2 + wang_i_sunrise3 + Sunrise - 1) %>%
+    select(-wang_i_sunrise1,-wang_i_sunrise2,-wang_i_sunrise3)
+  
+  wang_calculation = wang_calculation %>%
+    mutate(
+      wang_PAR = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR1 * (sin((time - wang_i_sunrise) *
+                                                                                               pi / (wang_i_dayduration)
+      ) / sin((wang_i_time1 - wang_i_sunrise) * pi / (wang_i_dayduration)
+      ))) +
+        (time - wang_i_time1) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR2 *
+                                                                   (sin((time - wang_i_sunrise) * pi / (Sunset - Sunrise)
+                                                                   ) / sin((wang_i_time2 - wang_i_sunrise) * pi / (wang_i_dayduration)
+                                                                   )))
+    )
+  
+  #filter out observations with a SR as the first observation. Then calculate PAR from second observation using 6.2
+  
+  
+  SR_adjust = wang_calculation %>%
+    filter(wang_i_obs1 == 17 + iSR | wang_i_obs1 == 19 + iSR) %>%
+    mutate(wang_PAR_SR = wang_i_PAR2 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
+           / sin((wang_i_time2 - wang_i_sunrise) * pi / wang_i_dayduration))
+  
+  # set PAR with times where SR is the second observation to 0
+  
+  SR_adjust_e = wang_calculation %>%
+    filter(wang_i_obs2 == 17 + iSR | wang_i_obs2 == 19 + iSR) %>%
+    mutate(wang_PAR_SR = 0)
+  
+  #combine SR_adjust tables
+  
+  SR_adjust = rbind(SR_adjust, SR_adjust_e)
+  
+  #Insert SR_adjust into wang_calculation
+  
+  wang_calculation = right_join(SR_adjust, wang_calculation)
+  wang_calculation$wang_PAR[!is.na(wang_calculation$wang_PAR_SR)] = wang_calculation$wang_PAR_SR[!is.na(wang_calculation$wang_PAR_SR)]
+  
+  
+  #filter out observations with a SS as the second observation. Then calculate PAR from first observation using 6.2
+  
+  SS_adjust = wang_calculation %>%
+    filter(wang_i_obs2 == 18 + iSR |
+             wang_i_obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
+    mutate(wang_PAR_SS = wang_i_PAR1 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
+           / sin((wang_i_time1 - wang_i_sunrise) * pi / wang_i_dayduration))
+  
+  # set PAR with times where SS is the first observation to 0
+  
+  SS_adjust_e = wang_calculation %>%
+    filter(wang_i_obs1 == 18 + iSR |
+             wang_i_obs1 == 16 + (iSR + 3) %% 5 + iSR) %>%
+    mutate(wang_PAR_SS = 0)
+  
+  #combine SR_adjust tables
+  
+  SS_adjust = rbind(SS_adjust, SS_adjust_e)
+  
+  #Insert SS_adjust into wang_calculation
+  
+  wang_calculation = right_join(SS_adjust, wang_calculation)
+  wang_calculation$wang_PAR[!is.na(wang_calculation$wang_PAR_SS)] = wang_calculation$wang_PAR_SS[!is.na(wang_calculation$wang_PAR_SS)]
+  
+  #day of no observations
+  
+  no_obs_adjust = wang_calculation %>%
+    filter(wang_i_obs1 > 18 & wang_i_obs2 > 18) %>%
+    mutate(wang_PAR_no = NaN)
+  
+  #Insert no_obs_adjust
+  
+  wang_calculation = right_join(no_obs_adjust, wang_calculation)
+  wang_calculation$wang_PAR[!is.na(wang_calculation$wang_PAR_no)] = wang_calculation$wang_PAR_no[!is.na(wang_calculation$wang_PAR_no)]
   
   
   
+  i = 0:16 * precision + 1
+  wang_calculation$wang_PAR[i] = wang_calculation$PAR[i]
+  rm(i)
+  return(wang_calculation$wang_PAR)
 }
 
+wang_PAR = add_wang(time_ele_PAR, SS, observations)
 
-wang_calculation = time_ele_PAR %>%
-  mutate(wang_i_obs1 = floor(t*8),
-         wang_i_obs2 = ceiling(t*8))
+time_ele_PAR = time_ele_PAR %>%
+  cbind(., wang_PAR)
 
-SS = SS %>%
-  mutate(slot1f = ceiling(time*800+1),
-         slot1c = ceiling(slot1f/100)*100,
-         slot2c = floor(SS$time*800+1),
-         slot2f = floor(slot2c/100)*100+2)
-
-
-for (i in 1:4) {
-  wang_calculation$wang_i_obs1[SS$slot1f[i]:SS$slot1c[i]] = 16 + i
-  wang_calculation$wang_i_obs2[SS$slot2f[i]:SS$slot2c[i]] = 16 + i
-}
-
-
-wang_calculation = wang_calculation %>%
-  mutate(
-    wang_i_PAR1 = wang_index$PAR[wang_calculation$wang_i_obs1 + 1],
-    wang_i_PAR2 = wang_index$PAR[wang_calculation$wang_i_obs2 + 1],
-    wang_i_time1 = wang_index$time[wang_calculation$wang_i_obs1 + 1],
-    wang_i_time2 = wang_index$time[wang_calculation$wang_i_obs2 + 1],
-    wang_i_sunrise1 = time>((Sunrise+Sunset-1)/2),
-    wang_i_sunrise2 = time>((Sunrise+Sunset+1)/2),
-    wang_i_sunrise3 = time>((Sunrise+Sunset+3)/2),
-    wang_i_dayduration = Sunset-Sunrise
-  )
-
-wang_calculation = wang_calculation %>%
-  mutate(wang_i_sunrise = wang_i_sunrise1 + wang_i_sunrise2 + wang_i_sunrise3 + Sunrise - 1) %>%
-  select(-wang_i_sunrise1, -wang_i_sunrise2, -wang_i_sunrise3)
-
-wang_calculation = wang_calculation %>%
-  mutate(
-    wang_PAR = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR1 * (sin((time - wang_i_sunrise) *
-                                                                                             pi / (wang_i_dayduration)
-    ) / sin((wang_i_time1 - wang_i_sunrise) * pi / (wang_i_dayduration)
-    ))) +
-      (time - wang_i_time1) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR2 *
-                                                                 (sin((time - wang_i_sunrise) * pi / (Sunset - Sunrise)
-                                                                 ) / sin((wang_i_time2 - wang_i_sunrise) * pi / (wang_i_dayduration)
-                                                                 )))
-  )
-
-i = wang_calculation %>%
-  filter(observation == TRUE) %>%
-  select(time) %>%
-  as_vector() %>%
-  '*'(precision*8) + 1
-
-wang_calculation$wang_PAR[i] = wang_calculation$PAR[i] 
-rm(i)
-
-wang_calculation = wang_calculation %>%
+time_ele_PAR = time_ele_PAR %>%
   mutate(wang_percent = wang_PAR/maxPAR) 
+
+
 
 
 ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
@@ -229,25 +293,3 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   scale_color_viridis_c(option = "C")+
   geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
   theme_minimal()
-
-
-
-time_ele_PAR = time_ele_PAR %>%
-  mutate(
-    wang_i_PAR1 = wang_index$PAR[time_ele_PAR$wang_i_obs1 + 1],
-    wang_i_PAR2 = wang_index$PAR[time_ele_PAR$wang_i_obs2 + 1],
-    wang_i_time1 = wang_index$time[time_ele_PAR$wang_i_obs1 + 1],
-    wang_i_time2 = wang_index$time[time_ele_PAR$wang_i_obs2 + 1]
-  )
-
-
-a = time_ele_PAR 
-
-(a$wang_i_time2 - a$time) / (a$wang_i_time2 - a$wang_i_time1) * (a$wang_i_PAR1 * (sin((a$time - Sunrise) *
-                                                                              pi / (Sunset - Sunrise)
-) / sin((a$wang_i_time1 - Sunrise) * pi / (Sunset - Sunrise)
-))) +
-  (time - a$wang_i_time1) / (a$wang_i_time2 - a$wang_i_time1) * (a$wang_i_PAR2 *
-                                                             (sin((a$time - Sunrise) * pi / (Sunset - Sunrise)
-                                                             ) / sin((a$wang_i_time2 - Sunrise) * pi / (Sunset - Sunrise)
-                                                             )))
