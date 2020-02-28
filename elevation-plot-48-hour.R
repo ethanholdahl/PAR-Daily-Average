@@ -1,8 +1,8 @@
 library(ggplot2)
-Latitude = 44
+Latitude = -80
 Longitude = -123
 year = 2020
-day = 50
+day = 21
 t=.5
 Sunrise = 0 #initializing for global assignment
 Sunset = 0 #initializing for global assignment
@@ -92,7 +92,8 @@ time_ele_PAR = time_ele_PAR %>%
          elevation = elevation(t, Latitude, Longitude, year, day),
          light = elevation>=0,
          maxPAR = light*.487*1361*sin(elevation*pi/180),
-         percentMax = observation*light*runif(length(t), min = 0, max = 1),
+         percentMax = observation*light,
+         #percentMax = observation*light*runif(length(t), min = 0, max = 1),
          PAR = percentMax*maxPAR)
 
 ###Seperating observations
@@ -173,23 +174,20 @@ add_wang = function(time_ele_PAR, SS, observations) {
   
   wang_calculation = wang_calculation %>%
     mutate(
-      wang_PAR = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR1 * (sin((time - wang_i_sunrise) *
-                                                                                               pi / (wang_i_dayduration)
-      ) / sin((wang_i_time1 - wang_i_sunrise) * pi / (wang_i_dayduration)
-      ))) +
-        (time - wang_i_time1) / (wang_i_time2 - wang_i_time1) * (wang_i_PAR2 *
-                                                                   (sin((time - wang_i_sunrise) * pi / (Sunset - Sunrise)
-                                                                   ) / sin((wang_i_time2 - wang_i_sunrise) * pi / (wang_i_dayduration)
-                                                                   )))
-    )
+      PAR1 = wang_i_PAR1 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
+      / sin((wang_i_time1 - wang_i_sunrise) * pi / wang_i_dayduration),
+      PAR2 = wang_i_PAR2 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
+      / sin((wang_i_time2 - wang_i_sunrise) * pi / wang_i_dayduration),
+      percent_1 = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1),
+      percent_2 = (time - wang_i_time1) / (wang_i_time2 - wang_i_time1),
+      wang_PAR = percent_1*PAR1 + percent_2*PAR2)
   
   #filter out observations with a SR as the first observation. Then calculate PAR from second observation using 6.2
   
   
   SR_adjust = wang_calculation %>%
     filter(wang_i_obs1 == 17 + iSR | wang_i_obs1 == 19 + iSR) %>%
-    mutate(wang_PAR_SR = wang_i_PAR2 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
-           / sin((wang_i_time2 - wang_i_sunrise) * pi / wang_i_dayduration))
+    mutate(wang_PAR_SR = PAR2)
   
   # set PAR with times where SR is the second observation to 0
   
@@ -212,8 +210,7 @@ add_wang = function(time_ele_PAR, SS, observations) {
   SS_adjust = wang_calculation %>%
     filter(wang_i_obs2 == 18 + iSR |
              wang_i_obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
-    mutate(wang_PAR_SS = wang_i_PAR1 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
-           / sin((wang_i_time1 - wang_i_sunrise) * pi / wang_i_dayduration))
+    mutate(wang_PAR_SS = PAR1)
   
   # set PAR with times where SS is the first observation to 0
   
