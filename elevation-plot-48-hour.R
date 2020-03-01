@@ -1,5 +1,5 @@
 library(ggplot2)
-Latitude = -80
+Latitude = 30
 Longitude = -123
 year = 2020
 day = 21
@@ -29,8 +29,8 @@ elevation = function(t, Latitude, Longitude, year, day){
   vary = tan(pi/180*(ObliqCorrDeg/2))*tan(pi/180*(ObliqCorrDeg/2));
   EqOfTimeMinutes = 4*180/pi*(vary*sin(2*pi/180*(GeomMeanLongSunDeg))-2*EccentEarthOrbit*sin(pi/180*(GeomMeanAnomSunDeg))+4*EccentEarthOrbit*vary*sin(pi/180*(GeomMeanAnomSunDeg))*cos(2*pi/180*(GeomMeanLongSunDeg))-0.5*vary*vary*sin(4*pi/180*(GeomMeanLongSunDeg))-1.25*EccentEarthOrbit*EccentEarthOrbit*sin(2*pi/180*(GeomMeanAnomSunDeg)));
   
-  ## Define maximum PAR ratio: Solar Constant*.487(%of radiation that makes up PAR)*scale(100)/Sin(90)
-  MaxRatio=.487*1361*100;
+  ## Define maximum PAR: Solar Constant*.487(%of radiation that makes up PAR)*scale(100)/Sin(90)
+  MaxPAR=.487*1361*100;
   srssangle = 90;
   HAval = cos(pi/180*(srssangle))/(cos(pi/180*(Latitude))*cos(pi/180*(SunDeclineDeg)))-tan(pi/180*(Latitude))*tan(pi/180*(SunDeclineDeg));
   if (HAval <= -1){
@@ -92,9 +92,11 @@ time_ele_PAR = time_ele_PAR %>%
          elevation = elevation(t, Latitude, Longitude, year, day),
          light = elevation>=0,
          maxPAR = light*.487*1361*sin(elevation*pi/180),
-         percentMax = observation*light,
-         #percentMax = observation*light*runif(length(t), min = 0, max = 1),
-         PAR = percentMax*maxPAR)
+         #ratioMax = observation*light,
+         ratioMax = observation*light*runif(length(t), min = 0, max = 1),
+         PAR = ratioMax*maxPAR,
+         obs1 = floor(t * 8) + 1,
+         obs2 = ceiling(t * 8) + 1)
 
 ###Seperating observations
 observations = time_ele_PAR %>%
@@ -116,7 +118,7 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   #coord_cartesian(ylim = c(-.1,1)) +
   geom_line() +
   scale_x_time() +
-  geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = percentMax)) +
+  geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
   scale_color_viridis_c(option = "C", limits = c(0,1)) +
   geom_vline(xintercept = SS$time*24*60*60 , color = 8) +
   geom_vline(xintercept = c(Sunrise, Sunset)*24*60*60, color = 2) +
@@ -136,9 +138,7 @@ add_wang = function(time_ele_PAR, SS, observations) {
     select(time, elevation, PAR) %>%
     rbind(wang_index, .)
   
-  wang_calculation = time_ele_PAR %>%
-    mutate(wang_i_obs1 = floor(t * 8) + 1,
-           wang_i_obs2 = ceiling(t * 8) + 1)
+  wang_calculation = time_ele_PAR
   
   SS = SS %>%
     mutate(
@@ -151,17 +151,17 @@ add_wang = function(time_ele_PAR, SS, observations) {
   #fill obs 1 forward and obs 2 backwards (so obs 1 is the most recent and obs 2 in the soonest)
   
   for (i in 1:4) {
-    wang_calculation$wang_i_obs1[SS$slot1f[i]:SS$slot1c[i]] = 17 + i
-    wang_calculation$wang_i_obs2[SS$slot2f[5 - i]:SS$slot2c[5 - i]] = 17 + 5 - i
+    wang_calculation$obs1[SS$slot1f[i]:SS$slot1c[i]] = 17 + i
+    wang_calculation$obs2[SS$slot2f[5 - i]:SS$slot2c[5 - i]] = 17 + 5 - i
   }
   
   
   wang_calculation = wang_calculation %>%
     mutate(
-      wang_i_PAR1 = wang_index$PAR[wang_calculation$wang_i_obs1],
-      wang_i_PAR2 = wang_index$PAR[wang_calculation$wang_i_obs2],
-      wang_i_time1 = wang_index$time[wang_calculation$wang_i_obs1],
-      wang_i_time2 = wang_index$time[wang_calculation$wang_i_obs2],
+      wang_i_PAR1 = wang_index$PAR[wang_calculation$obs1],
+      wang_i_PAR2 = wang_index$PAR[wang_calculation$obs2],
+      wang_i_time1 = wang_index$time[wang_calculation$obs1],
+      wang_i_time2 = wang_index$time[wang_calculation$obs2],
       wang_i_sunrise1 = time > ((Sunrise + Sunset - 1) / 2),
       wang_i_sunrise2 = time > ((Sunrise + Sunset + 1) / 2),
       wang_i_sunrise3 = time > ((Sunrise + Sunset + 3) / 2),
@@ -178,21 +178,20 @@ add_wang = function(time_ele_PAR, SS, observations) {
       / sin((wang_i_time1 - wang_i_sunrise) * pi / wang_i_dayduration),
       PAR2 = wang_i_PAR2 * sin((time - wang_i_sunrise) * pi / wang_i_dayduration)
       / sin((wang_i_time2 - wang_i_sunrise) * pi / wang_i_dayduration),
-      percent_1 = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1),
-      percent_2 = (time - wang_i_time1) / (wang_i_time2 - wang_i_time1),
-      wang_PAR = percent_1*PAR1 + percent_2*PAR2)
+      ratio_1 = (wang_i_time2 - time) / (wang_i_time2 - wang_i_time1),
+      ratio_2 = (time - wang_i_time1) / (wang_i_time2 - wang_i_time1),
+      wang_PAR = ratio_1*PAR1 + ratio_2*PAR2)
   
   #filter out observations with a SR as the first observation. Then calculate PAR from second observation using 6.2
   
-  
   SR_adjust = wang_calculation %>%
-    filter(wang_i_obs1 == 17 + iSR | wang_i_obs1 == 19 + iSR) %>%
+    filter(obs1 == 17 + iSR | obs1 == 19 + iSR) %>%
     mutate(wang_PAR_SR = PAR2)
   
   # set PAR with times where SR is the second observation to 0
   
   SR_adjust_e = wang_calculation %>%
-    filter(wang_i_obs2 == 17 + iSR | wang_i_obs2 == 19 + iSR) %>%
+    filter(obs2 == 17 + iSR | obs2 == 19 + iSR) %>%
     mutate(wang_PAR_SR = 0)
   
   #combine SR_adjust tables
@@ -208,15 +207,15 @@ add_wang = function(time_ele_PAR, SS, observations) {
   #filter out observations with a SS as the second observation. Then calculate PAR from first observation using 6.2
   
   SS_adjust = wang_calculation %>%
-    filter(wang_i_obs2 == 18 + iSR |
-             wang_i_obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
+    filter(obs2 == 18 + iSR |
+             obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
     mutate(wang_PAR_SS = PAR1)
   
   # set PAR with times where SS is the first observation to 0
   
   SS_adjust_e = wang_calculation %>%
-    filter(wang_i_obs1 == 18 + iSR |
-             wang_i_obs1 == 16 + (iSR + 3) %% 5 + iSR) %>%
+    filter(obs1 == 18 + iSR |
+             obs1 == 16 + (iSR + 3) %% 5 + iSR) %>%
     mutate(wang_PAR_SS = 0)
   
   #combine SR_adjust tables
@@ -231,7 +230,7 @@ add_wang = function(time_ele_PAR, SS, observations) {
   #day of no observations
   
   no_obs_adjust = wang_calculation %>%
-    filter(wang_i_obs1 > 18 & wang_i_obs2 > 18) %>%
+    filter(obs1 > 17 & obs2 > 17) %>%
     mutate(wang_PAR_no = NaN)
   
   #Insert no_obs_adjust
@@ -243,7 +242,6 @@ add_wang = function(time_ele_PAR, SS, observations) {
   
   i = 0:16 * precision + 1
   wang_calculation$wang_PAR[i] = wang_calculation$PAR[i]
-  rm(i)
   return(wang_calculation$wang_PAR)
 }
 
@@ -253,7 +251,7 @@ time_ele_PAR = time_ele_PAR %>%
   cbind(., wang_PAR)
 
 time_ele_PAR = time_ele_PAR %>%
-  mutate(wang_percent = wang_PAR/maxPAR) 
+  mutate(wang_ratio = wang_PAR/maxPAR) 
 
 
 
@@ -262,8 +260,8 @@ ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
   #coord_cartesian(ylim = c(-.1,1)) +
   geom_line() +
   scale_x_time() +
-  geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_percent)) +
-  geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = percentMax)) +
+  geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_ratio)) +
+  geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
   scale_color_viridis_c(option = "C", limits = c(0,1)) +
   geom_vline(data = SS, aes(xintercept = time*24*60*60, color = 8)) +
   theme_minimal()
@@ -271,10 +269,159 @@ ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
 
 ##Create linear PAR ratio
 
+add_ratio = function(time_ele_PAR, SS, observations) {
+  #check observations. If both light then take average of ratios. Else take the ratio of the one with light.
+  ratio_index = observations %>%
+    select(time, elevation, ratioMax)
+  
+  ratio_calc = time_ele_PAR %>%
+    mutate(
+      rat1 = ratio_index$ratioMax[ratio_calc$obs1],
+      rat2 = ratio_index$ratioMax[ratio_calc$obs2],
+      time1 = ratio_index$time[ratio_calc$obs1],
+      time2 = ratio_index$time[ratio_calc$obs2],
+      linear_ratio =  rat1*(time2-time)/(time2-time1)+rat2*(time-time1)/(time2-time1)
+    )
+  
+  #identify SR/SS slots
+  
+  SS = SS %>%
+    mutate(
+      slot1f = ceiling(time * 8 * precision + 1),
+      slot1c = ceiling(slot1f / precision) * precision,
+      slot2c = floor(SS$time * 8 * precision + 1),
+      slot2f = floor(slot2c / precision) * precision + 2
+    )
+  
+  #fill obs 1 forward and obs 2 backwards (so obs 1 is the most recent and obs 2 in the soonest)
+  
+  for (i in 1:4) {
+    ratio_calc$obs1[SS$slot1f[i]:SS$slot1c[i]] = 17 + i
+    ratio_calc$obs2[SS$slot2f[5 - i]:SS$slot2c[5 - i]] = 17 + 5 - i
+  }
+  
+  #filter out observations with a SR as the first observation. Then use ratio from second observation
+  
+  SR_adjust1 = ratio_calc %>%
+    filter(time>5)
+  SR_adjust2 = ratio_calc %>%
+    filter(time>5)
+  
+  if(SS_ele[iSR] == 0){
+    SR_adjust1 = ratio_calc %>%
+      filter(obs1 == 17 + iSR) %>%
+      mutate(linear_ratio_SR = rat2)
+  }
+  
+  if(SS_ele[iSR+2] == 0){
+    SR_adjust2 = ratio_calc %>%
+      filter(obs1 == 19 + iSR) %>%
+      mutate(linear_ratio_SR = rat2)
+  }
+  
+  # set PAR with times where SR is the second observation to 0
+  
+  SR_adjust_e = ratio_calc %>%
+    filter(obs2 == 17 + iSR | obs2 == 19 + iSR) %>%
+    mutate(linear_ratio_SR = 0)
+  
+  #combine SR_adjust tables
+  
+  SR_adjust = rbind(SR_adjust1, SR_adjust2, SR_adjust_e)
+  
+  #Insert SR_adjust into ratio_calc
+  
+  ratio_calc = right_join(SR_adjust, ratio_calc)
+  ratio_calc$linear_ratio[!is.na(ratio_calc$linear_ratio_SR)] = ratio_calc$linear_ratio_SR[!is.na(ratio_calc$linear_ratio_SR)]
+  
+  
+  #filter out observations with a SS as the second observation. Then use ratio from first observation
+  
+  SS_adjust1 = ratio_calc %>%
+    filter(time>5)
+  SS_adjust2 = ratio_calc %>%
+    filter(time>5)
+  
+  if(SS_ele[iSR+1] == 0){
+    SS_adjust1 = ratio_calc %>%
+      filter(obs2 == 18 + iSR) %>%
+      mutate(linear_ratio_SS = rat1)
+  }
+  
+  if(SS_ele[(iSR+3) %% 5 + iSR-1] == 0){
+    SS_adjust2 = ratio_calc %>%
+      filter(obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
+      mutate(linear_ratio_SS = rat1)
+  }
+  
+  
+  
+  # set PAR with times where SS is the first observation to 0
+  
+  SS_adjust_e = ratio_calc %>%
+    filter(obs1 == 18 + iSR |
+             obs1 == 16 + (iSR + 3) %% 5 + iSR) %>%
+    mutate(linear_ratio_SS = 0)
+  
+  #combine SR_adjust tables
+  
+  SS_adjust = rbind(SS_adjust1, SS_adjust2, SS_adjust_e)
+  
+  #Insert SS_adjust into ratio_calc
+  
+  ratio_calc = right_join(SS_adjust, ratio_calc)
+  ratio_calc$linear_ratio[!is.na(ratio_calc$linear_ratio_SS)] = ratio_calc$linear_ratio_SS[!is.na(ratio_calc$linear_ratio_SS)]
+  
+  #day of no observations
+  
+  no_obs_adjust = ratio_calc %>%
+    filter(obs1 > 17 & obs2 > 17) %>%
+    mutate(obs_no = NaN)
+  
+  #Insert no_obs_adjust
+  
+  ratio_calc = right_join(no_obs_adjust, ratio_calc)
+  ratio_calc$linear_ratio[!is.na(ratio_calc$obs_no)] = ratio_calc$obs_no[!is.na(ratio_calc$obs_no)]
+  
+  
+  i = 0:16 * precision + 1
+  ratio_calc$linear_ratio[i] = ratio_calc$ratioMax[i]
+  
+  return(ratio_calc$linear_ratio)
+}
 
 
 
-##create sky based on instPAR percentage of max and raw value (black at night, blue-gray during high-low par/high sun, red at sunset)
+linear_ratio = add_ratio(time_ele_PAR, SS, observations)
+
+time_ele_PAR = time_ele_PAR %>%
+  cbind(., linear_ratio)
+
+time_ele_PAR = time_ele_PAR %>%
+  mutate(linear_PAR = linear_ratio*maxPAR)
+
+ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
+  #coord_cartesian(ylim = c(-.1,1)) +
+  geom_line() +
+  scale_x_time() +
+  #geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_ratio)) +
+  geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = linear_PAR/(.487*1361), color = linear_ratio)) +
+  geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
+  scale_color_viridis_c(option = "C", limits = c(0,1)) +
+  geom_vline(data = SS, aes(xintercept = time*24*60*60, color = 8)) +
+  theme_minimal()
+
+
+ggplot(data = time_ele_PAR, aes(x = time, y = linear_ratio, color = linear_PAR))+
+  geom_line() +
+  geom_point(data = observations, aes(x = time, y = ratioMax, color = PAR)) +
+  #geom_line(data = time_ele_PAR, aes(x = time, y = wang_ratio, color = wang_PAR)) +
+  scale_color_viridis_c(option = "C") +
+  geom_vline(data = SS, aes(xintercept = time, color = 8)) +
+  theme_minimal()
+
+
+##create sky based on instPAR ratio of max and raw value (black at night, blue-gray during high-low par/high sun, red at sunset)
 
 sky = tibble(t)
 
@@ -286,7 +433,8 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   geom_line()+
   geom_vline(xintercept = 1:3, data =  ,aes())+
   scale_x_time()+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = percentMax))+
+  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = ratioMax))+
   scale_color_viridis_c(option = "C")+
   geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
   theme_minimal()
+
