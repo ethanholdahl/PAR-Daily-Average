@@ -1,5 +1,5 @@
 library(ggplot2)
-Latitude = -80
+Latitude = 30
 Longitude = -123
 year = 2020
 day = 21
@@ -274,12 +274,16 @@ add_ratio = function(time_ele_PAR, SS, observations) {
   ratio_index = observations %>%
     select(time, elevation, ratioMax)
   
-  ratio_index = SS %>%
-    mutate(ratioMax = 0) %>%
-    select(time, elevation, ratioMax) %>%
-    rbind(ratio_index, .)
+  ratio_calc = time_ele_PAR %>%
+    mutate(
+      rat1 = ratio_index$ratioMax[ratio_calc$obs1],
+      rat2 = ratio_index$ratioMax[ratio_calc$obs2],
+      time1 = ratio_index$time[ratio_calc$obs1],
+      time2 = ratio_index$time[ratio_calc$obs2],
+      linear_ratio =  rat1*(time2-time)/(time2-time1)+rat2*(time-time1)/(time2-time1)
+    )
   
-  ratio_calc = time_ele_PAR
+  #identify SR/SS slots
   
   SS = SS %>%
     mutate(
@@ -296,20 +300,24 @@ add_ratio = function(time_ele_PAR, SS, observations) {
     ratio_calc$obs2[SS$slot2f[5 - i]:SS$slot2c[5 - i]] = 17 + 5 - i
   }
   
-  ratio_calc = ratio_calc %>%
-    mutate(
-      rat1 = ratio_index$ratioMax[ratio_calc$obs1],
-      rat2 = ratio_index$ratioMax[ratio_calc$obs2],
-      time1 = wang_index$time[ratio_calc$obs1],
-      time2 = wang_index$time[ratio_calc$obs2],
-      linear_ratio =  rat1*(time2-time)/(time2-time1)+rat2*(time-time1)/(time2-time1)
-    )
-  
   #filter out observations with a SR as the first observation. Then use ratio from second observation
   
-  SR_adjust = ratio_calc %>%
-    filter(obs1 == 17 + iSR | obs1 == 19 + iSR) %>%
-    mutate(linear_ratio_SR = rat2)
+  SR_adjust1 = ratio_calc %>%
+    filter(time>5)
+  SR_adjust2 = ratio_calc %>%
+    filter(time>5)
+  
+  if(SS_ele[iSR] == 0){
+    SR_adjust1 = ratio_calc %>%
+      filter(obs1 == 17 + iSR) %>%
+      mutate(linear_ratio_SR = rat2)
+  }
+  
+  if(SS_ele[iSR+2] == 0){
+    SR_adjust2 = ratio_calc %>%
+      filter(obs1 == 19 + iSR) %>%
+      mutate(linear_ratio_SR = rat2)
+  }
   
   # set PAR with times where SR is the second observation to 0
   
@@ -319,7 +327,7 @@ add_ratio = function(time_ele_PAR, SS, observations) {
   
   #combine SR_adjust tables
   
-  SR_adjust = rbind(SR_adjust, SR_adjust_e)
+  SR_adjust = rbind(SR_adjust1, SR_adjust2, SR_adjust_e)
   
   #Insert SR_adjust into ratio_calc
   
@@ -329,9 +337,24 @@ add_ratio = function(time_ele_PAR, SS, observations) {
   
   #filter out observations with a SS as the second observation. Then use ratio from first observation
   
-  SS_adjust = ratio_calc %>%
-    filter(obs2 == 18 + iSR | obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
-    mutate(linear_ratio_SS = rat1)
+  SS_adjust1 = ratio_calc %>%
+    filter(time>5)
+  SS_adjust2 = ratio_calc %>%
+    filter(time>5)
+  
+  if(SS_ele[iSR+1] == 0){
+    SS_adjust1 = ratio_calc %>%
+      filter(obs2 == 18 + iSR) %>%
+      mutate(linear_ratio_SS = rat1)
+  }
+  
+  if(SS_ele[(iSR+3) %% 5 + iSR-1] == 0){
+    SS_adjust2 = ratio_calc %>%
+      filter(obs2 == 16 + (iSR + 3) %% 5 + iSR) %>%
+      mutate(linear_ratio_SS = rat1)
+  }
+  
+  
   
   # set PAR with times where SS is the first observation to 0
   
@@ -342,7 +365,7 @@ add_ratio = function(time_ele_PAR, SS, observations) {
   
   #combine SR_adjust tables
   
-  SS_adjust = rbind(SS_adjust, SS_adjust_e)
+  SS_adjust = rbind(SS_adjust1, SS_adjust2, SS_adjust_e)
   
   #Insert SS_adjust into ratio_calc
   
@@ -367,6 +390,8 @@ add_ratio = function(time_ele_PAR, SS, observations) {
   return(ratio_calc$linear_ratio)
 }
 
+
+
 linear_ratio = add_ratio(time_ele_PAR, SS, observations)
 
 time_ele_PAR = time_ele_PAR %>%
@@ -384,6 +409,15 @@ ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
   geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
   scale_color_viridis_c(option = "C", limits = c(0,1)) +
   geom_vline(data = SS, aes(xintercept = time*24*60*60, color = 8)) +
+  theme_minimal()
+
+
+ggplot(data = time_ele_PAR, aes(x = time, y = linear_ratio, color = linear_PAR))+
+  geom_line() +
+  geom_point(data = observations, aes(x = time, y = ratioMax, color = PAR)) +
+  #geom_line(data = time_ele_PAR, aes(x = time, y = wang_ratio, color = wang_PAR)) +
+  scale_color_viridis_c(option = "C") +
+  geom_vline(data = SS, aes(xintercept = time, color = 8)) +
   theme_minimal()
 
 
