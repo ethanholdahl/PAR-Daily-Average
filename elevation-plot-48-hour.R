@@ -1,5 +1,5 @@
 library(ggplot2)
-Latitude = 30
+Latitude = -90
 Longitude = -123
 year = 2020
 day = 21
@@ -274,6 +274,8 @@ add_ratio = function(time_ele_PAR, SS, observations) {
   ratio_index = observations %>%
     select(time, elevation, ratioMax)
   
+  ratio_calc = time_ele_PAR
+  
   ratio_calc = time_ele_PAR %>%
     mutate(
       rat1 = ratio_index$ratioMax[ratio_calc$obs1],
@@ -421,20 +423,7 @@ ggplot(data = time_ele_PAR, aes(x = time, y = linear_ratio, color = linear_PAR))
   theme_minimal()
 
 
-##create sky based on instPAR ratio of max and raw value (black at night, blue-gray during high-low par/high sun, red at sunset)
-
-sky = tibble(t)
-
-# t[101]=Sunrise
-#Sunset = length-100
-
-ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
-  #coord_cartesian(ylim = c(-.1,1))+
-  geom_line()+
-  geom_vline(xintercept = 1:3, data =  ,aes())+
-  scale_x_time()+
-  geom_point(data = daylightObservations, aes(x = time*24*60*60, y = max_PAR/(.487*1361), color = ratioMax))+
-  scale_color_viridis_c(option = "C")+
-  geom_point(data = observationsSS, aes(x = time*24*60*60,  y = max_PAR/(.487*1361)), color = 2)+
-  theme_minimal()
+totalWang = sum(time_ele_PAR$wang_PAR)
+totalLinear = sum(time_ele_PAR$linear_PAR)
+error = (totalWang-totalLinear)/totalLinear
 
