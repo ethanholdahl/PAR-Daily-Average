@@ -52,6 +52,9 @@ elevation = function(t, Latitude, Longitude, year, day){
   
 }
 
+wang_elevation = function(time, Latitude, Longitude, year, day){
+  
+}
 
 precision = 100
 
