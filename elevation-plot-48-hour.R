@@ -1,5 +1,5 @@
 library(ggplot2)
-Latitude = -90
+Latitude = -60
 Longitude = -123
 year = 2020
 day = 21
@@ -64,12 +64,18 @@ ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,Latitude,Longitude,year,
   geom_line()+
   scale_x_time()
 
-ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
+ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), color = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), size = 3))+
+  scale_color_viridis_c(option = "C",
+                        rescaler =  function(x, to = NULL, from = NULL) {
+                          ifelse(x<.2, 
+                                 scales::rescale(x, from = c(0,.2), to = c(.45,.85)),
+                                 scales::rescale(x, from = c(.2,1), to = c(.85,1)))
+                        }) +
   coord_cartesian(ylim = c(-.1,1))+
-  geom_line()+
+  geom_point()+
   scale_x_time()
 
-ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,day)/90, col = "elevation"))+
+ ggplot(data = NULL, aes(x = t*24*60*60, y = elevation(t,Latitude,Longitude,year,day)/90, col = "elevation"))+
   coord_cartesian(ylim = c(-.1,1))+
   geom_line()+
   geom_line(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), col = "sin(elevation)"))+
@@ -406,7 +412,7 @@ ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
   #coord_cartesian(ylim = c(-.1,1)) +
   geom_line() +
   scale_x_time() +
-  #geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_ratio)) +
+  geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_ratio)) +
   geom_line(data = time_ele_PAR, aes(x = 24*60*60*time, y = linear_PAR/(.487*1361), color = linear_ratio)) +
   geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
   scale_color_viridis_c(option = "C", limits = c(0,1)) +
@@ -426,4 +432,5 @@ ggplot(data = time_ele_PAR, aes(x = time, y = linear_ratio, color = linear_PAR))
 totalWang = sum(time_ele_PAR$wang_PAR)
 totalLinear = sum(time_ele_PAR$linear_PAR)
 error = (totalWang-totalLinear)/totalLinear
+error
 
