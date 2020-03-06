@@ -52,8 +52,10 @@ elevation = function(t, Latitude, Longitude, year, day){
   
 }
 
-wang_elevation = function(time, Latitude, Longitude, year, day){
-  
+wang_elevation = function(time, t, Latitude, Longitude, year, day){
+  wang_ele = tibble(t)
+  wang_ele = wang_ele %>%
+    mutate(ele = Sunrise
 }
 
 precision = 100
@@ -65,7 +67,7 @@ ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,Latitude,Longitude,year,
   scale_x_time()
 
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), color = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), size = 3))+
-  scale_color_viridis_c(option = "C",
+  scale_color_viridis_c(option = "C", begin = .45,
                         rescaler =  function(x, to = NULL, from = NULL) {
                           ifelse(x<.2, 
                                  scales::rescale(x, from = c(0,.2), to = c(.45,.85)),
@@ -73,7 +75,7 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
                         }) +
   coord_cartesian(ylim = c(-.1,1))+
   geom_point()+
-  geom_point(data = NULL, aes(x = 24*60*60*t, y = sin())
+  geom_point(data = NULL, aes(x = 24*60*60*t[t>Sunrise & t<Sunset], y = sin((t[t>Sunrise & t<Sunset]-Sunrise)*pi/(Sunset-Sunrise)), color = -.2, size = 3)) +
   scale_x_time()
 
 
@@ -131,7 +133,7 @@ ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,y
   scale_x_time() +
   geom_point(data = observations, aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
   scale_color_viridis_c(option = "C", limits = c(0,1)) +
-  geom_vline(xintercept = SS$time*24*60*60 , color = 8) +
+  #geom_vline(xintercept = SS$time*24*60*60 , color = 8) +
   geom_vline(xintercept = c(Sunrise, Sunset)*24*60*60, color = 2) +
   theme_minimal()
 
