@@ -1,9 +1,9 @@
 library(ggplot2)
-Latitude = -60
+Latitude = -20
 Longitude = -123
 year = 2020
 day = 21
-
+time = 0
 elevation = function(t, Latitude, Longitude, year, day){
   #Converting the year and day to Julian Day and Century. 2454466.5 is
   #12:00 AM of Jan 1 2008. Using mid day as the average 2454467 is Jan 1 2008
@@ -53,17 +53,28 @@ elevation = function(t, Latitude, Longitude, year, day){
 }
 
 wang_elevation = function(time, t, Latitude, Longitude, year, day){
-  wang_ele = tibble(t)
-  wang_ele = wang_ele %>%
-    mutate(ele = Sunrise
+  timeEle = sin(elevation(time, Latitude, Longitude, year, day)*pi/180)
+  adj = 1
+  if (time > (Sunrise+Sunset-1)/2) {
+    adj = adj - 1
+  }
+  if (time > (Sunrise+Sunset+1)/2) {
+    adj = adj - 1 
+  }
+  wangEle = sin((time+adj-Sunrise)*pi/(Sunset-Sunrise))
+  ratio = timeEle/wangEle
+  wang_ele = sin((t+adj-Sunrise)*pi/(Sunset-Sunrise))*ratio
 }
+
+
 
 precision = 100
 
 t = round(seq(0, 2, 1/(8*precision)), digits = 5)
-ggplot(data = NULL, aes(x = t*60*60*24, y = elevation(t,Latitude,Longitude,year,day)))+
-  coord_cartesian(ylim = c(-10,90))+
+ggplot(data = NULL, aes(x = t*60*60*24, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
+  coord_cartesian(ylim = c(-1,1))+
   geom_line()+
+  geom_line(data = NULL, aes(x=60*60*24*t, y = wang_elevation(time, t, Latitude, Longitude, year, day)))+
   scale_x_time()
 
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), color = sin(elevation(t,Latitude,Longitude,year,day)*pi/180), size = 3))+
