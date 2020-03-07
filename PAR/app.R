@@ -65,7 +65,7 @@ ui <- fluidPage(# Application title
         ),
         
         # Show a plot of the generated distribution
-        mainPanel(img(src = "Sun-Diagram-Solo.PNG", height = 300, width = 400), uiOutput("image2"), plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio"))
+        mainPanel(imageOutput("image1"), plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio"))
     ))
 
 # Define server logic
@@ -456,9 +456,8 @@ server <- function(input, output) {
     })
     
     output$image1 = renderImage({
-        outfile = tempfile(fileext = '.png')
-        png(outfile, width = 400, height = 300)
-        
+        list(src = "Sun-Diagram-Zoomed.PNG",
+             filetype = "image/png")
     })
     
     output$elevation = renderPlot({
