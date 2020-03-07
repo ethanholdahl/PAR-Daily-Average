@@ -388,13 +388,17 @@ inputPanel(
   sliderInput("year", label = "Year:",
               min = 2000, max = 2050, step = 1, value = 2020),
   sliderInput("day", label = "Day:",
-              min = 1, max = 365, step = 1, value = 1)
+              min = 1, max = 365, step = 1, value = 1),
+  sliderInput("time", label = "time:",
+              min = 0, max = 2, step = 1/800, value = 1)
 )
 ```
 
 The colorful plot represents the actual elevation, the transparent grey plot represents the elevation that would make Wang's algorithm equivalent to my ratio algorithm.
 
 ```{r output elevation, cache=FALSE, echo=FALSE}
+reactive(elevation(input$time, input$Latitude, input$Longitude, input$year, input$day))
+
 renderPlot({
   ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,input$Latitude,input$Longitude,input$year,input$day)*pi/180), color = sin(elevation(t,input$Latitude,input$Longitude,input$year,input$day)*pi/180), size = 3, alpha = 1))+
     scale_color_viridis_c(option = "C", begin = .45,
@@ -409,10 +413,27 @@ renderPlot({
 geom_point(data = NULL, aes(x = 24*60*60*(t[t>Sunrise & t<Sunset]-1), y = sin((t[t>Sunrise & t<Sunset]-Sunrise)*pi/(Sunset-Sunrise)), color = -.2, size = 3, alpha = .2)) +
     geom_point(data = NULL, aes(x = 24*60*60*(t[t>Sunrise & t<Sunset]+1), y = sin((t[t>Sunrise & t<Sunset]-Sunrise)*pi/(Sunset-Sunrise)), color = -.2, size = 3, alpha = .2)) +
     scale_x_time(limits = c(0,2*24*60*60))
-  })
+})
 ```
 
 ```{r plot 2, cache=FALSE, echo=FALSE}
+
+renderPlot({
+  ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,input$Latitude,input$Longitude,input$year,input$day)*pi/180), color = sin(elevation(t,input$Latitude,input$Longitude,input$year,input$day)*pi/180), size = 3, alpha = 1))+
+    scale_color_viridis_c(option = "C", begin = .45,
+                          rescaler =  function(x, to = NULL, from = NULL) {
+                            ifelse(x<.2,
+                                   scales::rescale(x, from = c(0,.2), to = c(0,.85)),
+                                   scales::rescale(x, from = c(.2,1), to = c(.85,1)))
+                            }) +
+    coord_cartesian(ylim = c(-1,1))+
+    geom_point()+
+    geom_point(data = NULL, aes(x = 24*60*60*t[t>Sunrise & t<Sunset], y = sin((t[t>Sunrise & t<Sunset]-Sunrise)*pi/(Sunset-Sunrise)), color = -.2, size = 3, alpha = .2)) +
+geom_point(data = NULL, aes(x = 24*60*60*(t[t>Sunrise & t<Sunset]-1), y = sin((t[t>Sunrise & t<Sunset]-Sunrise)*pi/(Sunset-Sunrise)), color = -.2, size = 3, alpha = .2)) +
+    geom_point(data = NULL, aes(x = 24*60*60*(t[t>Sunrise & t<Sunset]+1), y = sin((t[t>Sunrise & t<Sunset]-Sunrise)*pi/(Sunset-Sunrise)), color = -.2, size = 3, alpha = .2)) +
+    scale_x_time(limits = c(0,2*24*60*60))
+})
+
 
 ```
 ## Data

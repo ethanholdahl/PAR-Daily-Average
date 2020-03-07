@@ -1,9 +1,9 @@
 library(ggplot2)
-Latitude = -20
-Longitude = -123
+Latitude = -77
+Longitude = -21
 year = 2020
-day = 21
-time = 0
+day = 1
+time = Sunrise
 elevation = function(t, Latitude, Longitude, year, day){
   #Converting the year and day to Julian Day and Century. 2454466.5 is
   #12:00 AM of Jan 1 2008. Using mid day as the average 2454467 is Jan 1 2008
@@ -64,12 +64,13 @@ wang_elevation = function(time, t, Latitude, Longitude, year, day){
   wangEle = sin((time+adj-Sunrise)*pi/(Sunset-Sunrise))
   ratio = timeEle/wangEle
   wang_ele = sin((t+adj-Sunrise)*pi/(Sunset-Sunrise))*ratio
+  return(wang_ele)
 }
 
 
 
 precision = 100
-
+time = 1
 t = round(seq(0, 2, 1/(8*precision)), digits = 5)
 ggplot(data = NULL, aes(x = t*60*60*24, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180)))+
   coord_cartesian(ylim = c(-1,1))+
