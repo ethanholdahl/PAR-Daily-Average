@@ -51,11 +51,21 @@ ui <- fluidPage(# Application title
                 max = 2,
                 step = 1 / 8,
                 value = 1
+            ),
+            checkboxInput(
+                "Wang",
+                "See Wang PAR/ratio",
+                TRUE
+            ),
+            checkboxInput(
+                "ratio",
+                "See ratio PAR/ratio",
+                TRUE
             )
         ),
         
         # Show a plot of the generated distribution
-        mainPanel(plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio"))
+        mainPanel(img(src = "Sun-Diagram-Solo.PNG", height = 300, width = 400), uiOutput("image2"), plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio"))
     ))
 
 # Define server logic
@@ -445,10 +455,16 @@ server <- function(input, output) {
             filter(observation == TRUE)
     })
     
+    output$image1 = renderImage({
+        outfile = tempfile(fileext = '.png')
+        png(outfile, width = 400, height = 300)
+        
+    })
+    
     output$elevation = renderPlot({
         ggplot(data = NULL,
                aes(
-                   x = 24 * 60 * 60 * t,
+                   x = t,
                    y = sin(
                        elevation(
                            t,
@@ -484,27 +500,34 @@ server <- function(input, output) {
             ) +
             coord_cartesian(ylim = c(-1, 1)) +
             geom_point() +
-            geom_line(data = NULL, aes(x=60*60*24*t, y = wang_elevation(input$time, t, input$Latitude, input$Longitude, input$year, input$day), size = 1, color = 0))+
-            geom_point(data = NULL, aes(x=60*60*24*input$time, y = sin(elevation(input$time, input$Latitude, input$Longitude, input$year, input$day)*pi/180), size = 5, color = 0 ))
+            geom_line(data = NULL, aes(x=t, y = wang_elevation(input$time, t, input$Latitude, input$Longitude, input$year, input$day), size = 1, color = 0))+
+            geom_point(data = NULL, aes(x=input$time, y = sin(elevation(input$time, input$Latitude, input$Longitude, input$year, input$day)*pi/180), size = 5, color = 0 )) +
+            scale_size(guide = 'none') +
+            labs(x = "time", y = "sin(elevation)", color = "sin(ele)")
     })
     
     output$PAR = renderPlot({
-        ggplot(data = time_ele_PAR(), aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
-            #coord_cartesian(ylim = c(-.1,1)) +
+        p = ggplot(data = time_ele_PAR(), aes(x = time, y = sin(elevation*pi/180))) +
             geom_line() +
-            scale_x_time() +
-            geom_line(aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_ratio)) +
-            geom_line(aes(x = 24*60*60*time, y = linear_PAR/(.487*1361), color = linear_ratio)) +
-            geom_point(data = observations(), aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
-            scale_color_viridis_c(option = "C", limits = c(0,1))
+            geom_point(data = observations(), aes(x = time, y = PAR/(.487*1361), color = ratioMax)) +
+            scale_color_viridis_c(option = "C", limits = c(0,1)) +
+            labs(y = "sin(elevation)")
+        
+        if(input$Wang) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = wang_PAR/(.487*1361), color = wang_ratio))
+        if(input$ratio) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = linear_PAR/(.487*1361), color = linear_ratio))
+        
+        p
     })
     
     output$ratio = renderPlot({
-        ggplot(data = time_ele_PAR(), aes(x = time, y = linear_ratio, color = linear_PAR))+
-            geom_line() +
-            geom_point(data = observations(), aes(x = time, y = ratioMax, color = PAR)) +
-            geom_line(aes(x = time, y = wang_ratio, color = wang_PAR)) +
+        p = ggplot(data = observations(), aes(x = time, y = ratioMax, color = PAR))+
+            geom_point() +
             scale_color_viridis_c(option = "C")
+        
+        if(input$Wang) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = wang_ratio, color = wang_PAR))
+        if(input$ratio) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = linear_ratio, color = linear_PAR))
+        
+        p
     })
     
 }
