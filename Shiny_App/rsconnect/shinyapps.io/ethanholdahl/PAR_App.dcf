@@ -5,8 +5,8 @@ account: ethanholdahl
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1917988
-bundleId: 2860107
+bundleId: 2860141
 url: https://ethanholdahl.shinyapps.io/PAR_App/
-when: 1583606007.55028
+when: 1583607722.08791
 asMultiple: FALSE
 asStatic: FALSE
