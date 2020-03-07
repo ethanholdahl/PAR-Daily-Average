@@ -51,142 +51,6 @@ ui <- fluidPage(# Application title
                 max = 2,
                 step = 1 / 8,
                 value = 1
-            ),
-            sliderInput(
-                "ratio0",
-                label = "ratio 0:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio1",
-                label = "ratio 1:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio2",
-                label = "ratio 2:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio3",
-                label = "ratio 3:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio4",
-                label = "ratio 4:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio5",
-                label = "ratio 5:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio6",
-                label = "ratio 6:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio7",
-                label = "ratio 7:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio8",
-                label = "ratio 8:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio9",
-                label = "ratio 9:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio10",
-                label = "ratio 10:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio11",
-                label = "ratio 11:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio12",
-                label = "ratio 12:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio13",
-                label = "ratio 13:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio14",
-                label = "ratio 14:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio15",
-                label = "ratio 15:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
-            ),
-            sliderInput(
-                "ratio16",
-                label = "ratio 16:",
-                min = 0,
-                max = 1,
-                step = 1/100,
-                value = 1
             )
         ),
         
@@ -196,10 +60,7 @@ ui <- fluidPage(# Application title
 
 # Define server logic
 server <- function(input, output) {
-    inputRatio = reactive({
-        c(input$ratio0, input$ratio1, input$ratio2, input$ratio3, input$ratio4, input$ratio5, input$ratio6, input$ratio7, input$ratio8, input$ratio9, input$ratio10, input$ratio11, input$ratio12, input$ratio13, input$ratio14, input$ratio15, input$ratio16)
-        })
-    
+
     elevation = function(t, Latitude, Longitude, year, day){
         #Converting the year and day to Julian Day and Century. 2454466.5 is
         #12:00 AM of Jan 1 2008. Using mid day as the average 2454467 is Jan 1 2008
@@ -263,7 +124,7 @@ server <- function(input, output) {
         return(wang_ele)
     }
     
-    add_wang = function(t, Latitude, Longitude, year, day, inputRatio) {
+    add_wang = function(t, Latitude, Longitude, year, day) {
         ###Filling in observation and elevation data
         #Max PAR: .487*1361/sin(elevation)
         
@@ -274,7 +135,7 @@ server <- function(input, output) {
                    elevation = elevation(t, Latitude, Longitude, year, day),
                    light = elevation>=0,
                    maxPAR = light*.487*1361*sin(elevation*pi/180),
-                   ratioMax = observation*light*c(inputRatio[1], rep(inputRatio[-1], each = precision)),
+                   ratioMax = observation*light*runif(length(t), min = 0, max = 1),
                    PAR = ratioMax*maxPAR,
                    obs1 = floor(t * 8) + 1,
                    obs2 = ceiling(t * 8) + 1)
@@ -412,9 +273,9 @@ server <- function(input, output) {
         return(time_ele_PAR)
     }
     
-    add_ratio = function(t, Latitude, Longitude, year, day, inputRatio) {
+    add_ratio = function(t, Latitude, Longitude, year, day) {
         
-        time_ele_PAR = add_wang(t, Latitude, Longitude, year, day, inputRatio)
+        time_ele_PAR = add_wang(t, Latitude, Longitude, year, day)
         
         ###Seperating observations
         observations = time_ele_PAR %>%
@@ -559,8 +420,8 @@ server <- function(input, output) {
         return(time_ele_PAR)
     }
     
-    observations = function(t, Latitude, Longitude, year, day, inputRatio) {
-        observations = add_ratio(t, Latitude, Longitude, year, day, inputRatio)
+    observations = function(t, Latitude, Longitude, year, day) {
+        observations = add_ratio(t, Latitude, Longitude, year, day)
         observations = observations %>%
             filter(observation == TRUE)
         return(observations)
@@ -568,7 +429,15 @@ server <- function(input, output) {
     
     precision = 100
     t = round(seq(0, 2, 1/(8*precision)), digits = 5)
+    
+    time_ele_PAR = reactive({
+        add_ratio(t, input$Latitude, input$Longitude, input$year, input$day)
+    })
 
+    observations = reactive({
+        time_ele_PAR() %>%
+            filter(observation == TRUE)
+    })
     
     output$elevation = renderPlot({
         ggplot(data = NULL,
@@ -614,21 +483,21 @@ server <- function(input, output) {
     })
     
     output$PAR = renderPlot({
-        ggplot(data = add_ratio(t, input$Latitude, input$Longitude, input$year, input$day, inputRatio()), aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
+        ggplot(data = time_ele_PAR(), aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
             #coord_cartesian(ylim = c(-.1,1)) +
             geom_line() +
             scale_x_time() +
             geom_line(aes(x = 24*60*60*time, y = wang_PAR/(.487*1361), color = wang_ratio)) +
             geom_line(aes(x = 24*60*60*time, y = linear_PAR/(.487*1361), color = linear_ratio)) +
-            geom_point(data = observations(t, input$Latitude, input$Longitude, input$year, input$day, inputRatio()), aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
+            geom_point(data = observations(), aes(x = time*24*60*60, y = PAR/(.487*1361), color = ratioMax)) +
             scale_color_viridis_c(option = "C", limits = c(0,1))
     })
     
     output$ratio = renderPlot({
-        ggplot(data = add_ratio(t, input$Latitude, input$Longitude, input$year, input$day, inputRatio()), aes(x = time, y = linear_ratio, color = linear_PAR))+
+        ggplot(data = time_ele_PAR(), aes(x = time, y = linear_ratio, color = linear_PAR))+
             geom_line() +
-            geom_point(aes(x = time, y = ratioMax, color = PAR)) +
-            geom_line(data = observations(t, input$Latitude, input$Longitude, input$year, input$day, inputRatio()), aes(x = time, y = wang_ratio, color = wang_PAR)) +
+            geom_point(data = observations(), aes(x = time, y = ratioMax, color = PAR)) +
+            geom_line(aes(x = time, y = wang_ratio, color = wang_PAR)) +
             scale_color_viridis_c(option = "C")
     })
     

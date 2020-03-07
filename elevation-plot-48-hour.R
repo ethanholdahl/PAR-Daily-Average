@@ -442,7 +442,7 @@ ggplot(data = time_ele_PAR, aes(x = 24*60*60*time, y = sin(elevation*pi/180))) +
 ggplot(data = time_ele_PAR, aes(x = time, y = linear_ratio, color = linear_PAR))+
   geom_line() +
   geom_point(data = observations, aes(x = time, y = ratioMax, color = PAR)) +
-  #geom_line(data = time_ele_PAR, aes(x = time, y = wang_ratio, color = wang_PAR)) +
+  geom_line(data = time_ele_PAR, aes(x = time, y = wang_ratio, color = wang_PAR)) +
   scale_color_viridis_c(option = "C") +
   geom_vline(data = SS, aes(xintercept = time, color = 8)) +
   theme_minimal()
