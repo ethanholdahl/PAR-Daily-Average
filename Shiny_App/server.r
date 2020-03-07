@@ -1,12 +1,16 @@
 
 ## Load and install the packages
-if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, shiny)
+library("tidyverse", "shiny")
 theme_set(theme_minimal())
 
 
 # Define server logic
 function(input, output) {
+  
+  url <- a("GitHub", href="https://github.com/ethanholdahl/PAR-Daily-Average")
+  output$tab <- renderUI({
+    tagList("Link to data and code:", url)
+  })
   
   elevation = function(t, Latitude, Longitude, year, day){
     #Converting the year and day to Julian Day and Century. 2454466.5 is
@@ -434,18 +438,23 @@ function(input, output) {
       geom_line(data = NULL, aes(x=t, y = wang_elevation(input$time, t, input$Latitude, input$Longitude, input$year, input$day), size = 1, color = 0))+
       geom_point(data = NULL, aes(x=input$time, y = sin(elevation(input$time, input$Latitude, input$Longitude, input$year, input$day)*pi/180), size = 5, color = 0 )) +
       scale_size(guide = 'none') +
-      labs(x = "time", y = "sin(elevation)", color = "sin(ele)")
+      labs(x = "time", y = "sin(elevation)", color = "sin(ele)", title = "Solar elevation for selected inputs.", 
+           subtitle = "The large purple point represents an observation at the specified time \n 
+           The purple line shows the elevation under which Wang's algorithm exhibits a linear proportion of maximum PAR.") +
+      theme(plot.title = element_text(size = 18, hjust = .5), plot.subtitle = element_text(size = 14, hjust = .5))
   })
   
   output$PAR = renderPlot({
-    p = ggplot(data = time_ele_PAR(), aes(x = time, y = sin(elevation*pi/180))) +
+    p = ggplot(data = time_ele_PAR(), aes(x = time, y = sin(elevation*pi/180)*(.487*1361))) +
       geom_line() +
-      geom_point(data = observations(), aes(x = time, y = PAR/(.487*1361), color = ratioMax)) +
+      geom_point(data = observations(), aes(x = time, y = PAR, color = ratioMax)) +
       scale_color_viridis_c(option = "C", limits = c(0,1)) +
-      labs(y = "sin(elevation)")
+      labs(y = "PAR", title = "Interpolated PAR values", subtitle = "The black line represents the path of the sun and the theoretical maximum PAR at the given elevation angle (for positive elevations). \n
+           The points represent observations, and the colorful line represents the interpolated PAR values color coded by the fraction of the maximum possible PAR at that elevation.") +
+    theme(plot.title = element_text(size = 18, hjust = .5), plot.subtitle = element_text(size = 14, hjust = .5))
     
-    if(input$Wang) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = wang_PAR/(.487*1361), color = wang_ratio))
-    if(input$ratio) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = linear_PAR/(.487*1361), color = linear_ratio))
+    if(input$Wang) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = wang_PAR, color = wang_ratio))
+    if(input$ratio) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = linear_PAR, color = linear_ratio))
     
     p
   })
@@ -453,7 +462,12 @@ function(input, output) {
   output$ratio = renderPlot({
     p = ggplot(data = observations(), aes(x = time, y = ratioMax, color = PAR))+
       geom_point() +
-      scale_color_viridis_c(option = "C")
+      scale_color_viridis_c(option = "C") +
+      labs(y = "Ratio", title = "Interpolated PAR ratio", 
+           subtitle = "The points represent observations and the colorful line represents the fraction of the maximum possible PAR at that elevation that was produced by interpolation. \n
+           Color coded by PAR values.") +
+      theme(plot.title = element_text(size = 18, hjust = .5), plot.subtitle = element_text(size = 14, hjust = .5))
+    
     
     if(input$Wang) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = wang_ratio, color = wang_PAR))
     if(input$ratio) p = p + geom_line(data = time_ele_PAR(), aes(x = time, y = linear_ratio, color = linear_PAR))

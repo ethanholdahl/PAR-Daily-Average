@@ -1,7 +1,6 @@
 
 ## Load and install the packages
-if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, shiny)
+library("tidyverse", "shiny")
 theme_set(theme_minimal())
 
 
@@ -61,10 +60,12 @@ fluidPage(# Application title
         "ratio",
         "See ratio PAR/ratio",
         TRUE
-      )
+      ),
+      h3("Data and Code"), uiOutput("tab")
     ),
     
     
     # Show a plot of the generated distribution
-    mainPanel(img(src = "Sun-Diagram-Solo.PNG", width = 600, height = 400), img(src = "Sun-Diagram-Zoomed.PNG", width = 600, height = 400), plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio"))
-  ))
+    mainPanel(img(src = "Sun-Diagram-Solo.PNG", width = 600, height = 400), img(src = "Sun-Diagram-Zoomed.PNG", width = 600, height = 400), plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio")
+              ))
+  )

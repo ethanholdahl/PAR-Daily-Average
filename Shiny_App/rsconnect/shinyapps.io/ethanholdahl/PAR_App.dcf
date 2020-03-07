@@ -1,0 +1,12 @@
+name: PAR_App
+title: PAR_App
+username:
+account: ethanholdahl
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1917988
+bundleId: 2860107
+url: https://ethanholdahl.shinyapps.io/PAR_App/
+when: 1583606007.55028
+asMultiple: FALSE
+asStatic: FALSE
