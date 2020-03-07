@@ -130,15 +130,22 @@ observations = time_ele_PAR %>%
 ##add vector to indicate Sunrise and Sunset times
 
 SS_time = c(Sunrise, Sunset, Sunrise+1, (Sunset+1)%%2)
-SS_time = sort(SS_time)
-SS_ele = round(elevation(SS_time, Latitude, Longitude, year, day), digits = 4)
+if(SS_time[2]>SS_time[4]){
+  SS_time = c(SS_time[4], SS_time[-4])
+  iSR = 2
+} else {
+  iSR = 1 
+}
+  SS_ele = round(elevation(SS_time, Latitude, Longitude, year, day), digits = 4)
+  
+  SS = tibble(time = SS_time, elevation = SS_ele) %>%
+    mutate(real = elevation == 0,
+           PAR = 0)
 
-iSR = as.numeric(Sunrise>(Sunset+1)%%2)+1
 
-SS = tibble(time = SS_time, elevation = SS_ele) %>%
-  mutate(real = elevation == 0,
-         PAR = 0)
 
+  
+  
 ggplot(data = NULL, aes(x = 24*60*60*t, y = sin(elevation(t,Latitude,Longitude,year,day)*pi/180))) +
   #coord_cartesian(ylim = c(-.1,1)) +
   geom_line() +
