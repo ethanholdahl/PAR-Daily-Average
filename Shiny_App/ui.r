@@ -5,12 +5,15 @@ theme_set(theme_minimal())
 
 
 # Define UI for the application 
-fluidPage(# Application title
-  titlePanel("PAR data methods"),
-  
+navbarPage(title = "Photosynthetically Acctive Radiation (PAR)",
+           tabPanel("Methods", 
+                    withMathJax(),
+                    includeMarkdown("PAR-Daily-Average.md")),
+           tabPanel("Plots",
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
+      style = "position:fixed;width:inherit;",
       sliderInput(
         "Latitude",
         label = "Latitude:",
@@ -60,12 +63,19 @@ fluidPage(# Application title
         "ratio",
         "See ratio PAR/ratio",
         TRUE
-      ),
-      h3("Data and Code"), uiOutput("tab")
+      )
     ),
     
     
     # Show a plot of the generated distribution
-    mainPanel(img(src = "Sun-Diagram-Solo.PNG", width = 600, height = 400), img(src = "Sun-Diagram-Zoomed.PNG", width = 600, height = 400), plotOutput("elevation"), plotOutput("PAR"), plotOutput("ratio")
-              ))
+    mainPanel(plotOutput("ratio"), br(), br(), br(), plotOutput("elevation"), br(), br(), br(), plotOutput("PAR")
+              ))),
+  tabPanel("Data",
+           h4("Daily Average Data"), uiOutput("results"),
+           br(), br(),br(),
+           h4("Input Data"), uiOutput("data")),
+  tabPanel("Code",
+           h4("Matlab Code"), uiOutput("matlab"),
+           br(),br(),br(),
+           h5("I am working on translating the matlab code to R code. When it is done it will be posted on here as well as on the GitHub page."))
   )
