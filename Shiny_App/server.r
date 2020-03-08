@@ -8,8 +8,16 @@ theme_set(theme_minimal())
 function(input, output) {
   
   url <- a("GitHub", href="https://github.com/ethanholdahl/PAR-Daily-Average")
-  output$tab <- renderUI({
-    tagList("Link to data:", url)
+  output$results = renderUI({
+    tagList("Link to output:", url)
+  })
+  
+  output$data = renderUI({
+    tagList("Link to inputs:", url)
+  })
+  
+  output$matlab = renderUI({
+    tagList("Link to Matlab code:", url)
   })
   
   elevation = function(t, Latitude, Longitude, year, day){

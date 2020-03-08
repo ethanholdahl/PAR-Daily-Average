@@ -5,7 +5,7 @@ theme_set(theme_minimal())
 
 
 # Define UI for the application 
-navbarPage(title = "Photosynthetically Acctive Radiation (PAR)",
+navbarPage(title = "Photosynthetically Active Radiation (PAR)",
            tabPanel("Methods", 
                     withMathJax(),
                     includeMarkdown("PAR-Daily-Average.md")),
@@ -71,13 +71,23 @@ navbarPage(title = "Photosynthetically Acctive Radiation (PAR)",
     mainPanel(plotOutput("ratio"), br(), br(), br(), plotOutput("elevation"), br(), br(), br(), plotOutput("PAR")
               ))),
   tabPanel("Data",
-           h4("Daily Average Data"),
-           img(src ="April1.PNG"),
+           h2("Daily Average Data"),
            uiOutput("results"),
+           h3("Images:"),
+           tabsetPanel(
+             tabPanel("January 1",
+                      img(src ="Jan1.PNG")),
+             tabPanel("April 1",
+                      img(src ="April1.PNG")),
+             tabPanel("July 1",
+                      img(src ="July1.PNG")),
+             tabPanel("October 1",
+                      img(src = "Oct1.PNG"))
+           ),
            br(), br(),br(),
-           h4("Input Data"), uiOutput("data")),
+           h2("Input Data"), uiOutput("data")),
   tabPanel("Code",
-           h4("Matlab Code"), uiOutput("matlab"),
+           h3("Matlab Code"), uiOutput("matlab"),
            br(),br(),br(),
            h5("I am working on translating the matlab code to R code. When it is done it will be posted on here as well as on the GitHub page."))
   )
