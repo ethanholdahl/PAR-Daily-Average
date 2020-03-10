@@ -17,7 +17,7 @@ output:
 
 ## Introduction
 
-In this document I will outline my methods used for calculating daily totals of photosynthetically active radiation (PAR) at a given location from incident PAR values. Photosynthetically active radiation is solar radiation in the 400-700 nm spectral range which plants can use for photosynthesis. The data I use is the GLASS PAR product sourced from the Global Land Cover Facility. The GLASS PAR product has 5km and 3 hour spatial and temporal resolution and contains incident radiation values from 2008-2010^1.
+In this document I will outline my methods used for calculating daily totals of photosynthetically active radiation (PAR) at a given location from incident PAR values. Photosynthetically active radiation is solar radiation in the 400-700 nm spectral range which plants can use for photosynthesis. As such it is a key input to a variety of different environmental and ecological problems. The data I use is the GLASS PAR product sourced from the Global Land Cover Facility. The GLASS PAR product has 5km and 3 hour spatial and temporal resolution and contains incident radiation values from 2008-2010^1.
 
 ## PAR mechanics
 
@@ -80,6 +80,11 @@ Refraction makes our calculations more difficult when the sun is near 0 degrees 
 ## Remarks
 
 Wang et al.'s algorithm is very good in the majority of cases because it is so similar to the ratio method. However it is not robust to extreme latitudes. My method of looking directly at the ratios is robust to all locations and because the math works out nicely is no more computationally expensive than the existing method.
+
+
+## Applications
+
+These data methods were created to produce a key input for the paper "Humanity's Fundamental Environmental Limits" (Binder, Holdahl, Trinh and Smith, in prep). The paper has a [GitHub repository](https://github.com/binders1/maxpop) that contains the code for the project, the data for which is hosted on [Figshare](https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369). Once published I will add the link to the paper and its citation here as well.
 
 ## References
 

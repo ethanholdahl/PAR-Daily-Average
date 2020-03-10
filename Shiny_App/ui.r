@@ -73,7 +73,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
   tabPanel("Data",
            h2("Daily Average Data"),
            uiOutput("results"),
-           h3("Images:"),
+           h3("Selected daily averages (results):"),
            tabsetPanel(
              tabPanel("January 1",
                       img(src ="Jan1.PNG")),

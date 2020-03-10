@@ -7,17 +7,19 @@ theme_set(theme_minimal())
 # Define server logic
 function(input, output) {
   
-  url <- a("GitHub", href="https://github.com/ethanholdahl/PAR-Daily-Average")
+  url1 <- a("Figshare", href="https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369")
   output$results = renderUI({
-    tagList("Link to output:", url)
+    tagList("Link to output:", url1)
   })
   
+  url2 <- a("GLASS", href="http://www.glass.umd.edu/PAR/")
   output$data = renderUI({
-    tagList("Link to inputs:", url)
+    tagList("Link to inputs:", url2)
   })
   
+  url3 <- a("GitHub", href="https://github.com/ethanholdahl/PAR-Daily-Average")
   output$matlab = renderUI({
-    tagList("Link to Matlab code:", url)
+    tagList("Link to Matlab code:", url3)
   })
   
   elevation = function(t, Latitude, Longitude, year, day){

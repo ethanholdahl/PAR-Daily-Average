@@ -1501,7 +1501,7 @@ University of Oregon<br>
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>In this document I will outline my methods used for calculating daily totals of photosynthetically active radiation (PAR) at a given location from incident PAR values. Photosynthetically active radiation is solar radiation in the 400-700 nm spectral range which plants can use for photosynthesis. The data I use is the GLASS PAR product sourced from the Global Land Cover Facility. The GLASS PAR product has 5km and 3 hour spatial and temporal resolution and contains incident radiation values from 2008-2010^1.</p>
+<p>In this document I will outline my methods used for calculating daily totals of photosynthetically active radiation (PAR) at a given location from incident PAR values. Photosynthetically active radiation is solar radiation in the 400-700 nm spectral range which plants can use for photosynthesis. As such it is a key input to a variety of different environmental and ecological problems. The data I use is the GLASS PAR product sourced from the Global Land Cover Facility. The GLASS PAR product has 5km and 3 hour spatial and temporal resolution and contains incident radiation values from 2008-2010^1.</p>
 </div>
 <div id="par-mechanics" class="section level2">
 <h2>PAR mechanics</h2>
@@ -1546,6 +1546,10 @@ diagram of solar radiation
 <div id="remarks" class="section level2">
 <h2>Remarks</h2>
 <p>Wang et al.’s algorithm is very good in the majority of cases because it is so similar to the ratio method. However it is not robust to extreme latitudes. My method of looking directly at the ratios is robust to all locations and because the math works out nicely is no more computationally expensive than the existing method.</p>
+</div>
+<div id="applications" class="section level2">
+<h2>Applications</h2>
+<p>These data methods were created to produce a key input for the paper “Humanity’s Fundamental Environmental Limits” (Binder, Holdahl, Trinh and Smith, in prep). The paper has a <a href="https://github.com/binders1/maxpop">GitHub repository</a> that contains the code for the project, the data for which is hosted on <a href="https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369">Figshare</a>. Once published I will add the link to the paper and its citation here as well.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
