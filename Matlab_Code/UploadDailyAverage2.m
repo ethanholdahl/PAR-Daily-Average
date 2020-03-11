@@ -1,6 +1,3 @@
-cd '/Users/Ethan Holdahl/Dropbox/GLASS PAR/Files';
-files = dir('**/*.hdf');
-cd '/Users/Ethan Holdahl/Dropbox/GLASS PAR/Final Scripts';
 load('lon.mat')
 load('lat.mat')
 GLASSdailyaverage=zeros(4320,8640,125,'int32');
