@@ -90,12 +90,12 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                                degrees at around 0 degrees elevation and quickly and exponentially approaches 0 degrees of refraction. However, with spatial resolution as fine
                                as we have in this data set that means that every day we have observations that pick up positive PAR values before and after our calculated times
                                for sunrise and sunset respectively. If we do not account for this and blindly plug our values into one of the algorithms provided above then our
-                               interpolated PAR values are negative. I corrct for these infrequent occurrences, which are easily identified, with a linear contingent plan. In
-                               these cases, I ignore solar position and assume a linear relationship between the PAR of the troublesome observation and its neighboring observations.
+                               interpolated PAR values are negative. I correct for these infrequent occurrences, which are easily identified, with a linear contingent plan. In
+                               these cases I ignore solar position and assume a linear relationship between the PAR of the troublesome observation and its neighboring observations.
                                Pseudocode with a graphical guide for exactly how I addressed these situations can be found in this project's <a href='https://github.com/ethanholdahl/PAR-Daily-Average'>GitHub repository</a>."),
                       h2("Remarks"),
                       helpText("Wang et al.'s algorithm is very good in the majority of cases because it is so similar to the ratio method. However it is not robust to extreme
-                               latitudes. My method of looking directly at the ratios is robust to all locations and because the math works out nicely is no more computationally
+                               latitudes. My method of looking directly at the ratios is robust to all locations and, because the math works out nicely, is no more computationally
                                expensive than the existing method."),
                       h2("Applications"),
                       HTML("These data methods were created to produce a key input for the paper \"Humanity's Fundamental Environmental Limits\" (Binder, Holdahl, Trinh and Smith, in prep).
