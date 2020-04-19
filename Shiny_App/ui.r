@@ -98,9 +98,10 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                                latitudes. My method of looking directly at the ratios is robust to all locations and, because the math works out nicely, is no more computationally
                                expensive than the existing method."),
                       h2("Applications"),
-                      HTML("These data methods were created to produce a key input for the paper \"Humanity's Fundamental Environmental Limits\" (Binder, Holdahl, Trinh and Smith, in prep).
-                      The paper has a <a href='https://github.com/binders1/maxpop'>GitHub repository</a> that contains the code for the project, the data for which is hosted on <a href='https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369'>Figshare</a>.
-                      Once published I will add the link to the paper and its citation here as well."),
+                      HTML("These data methods were created to produce a key input for the paper \"Humanity's Fundamental Environmental Limits\" (Binder, Holdahl, Trinh and Smith, 2020).
+                      View only access to that paper can be found <a href='https://link.springer.com/epdf/10.1007/s10745-020-00140-w?author_access_token=vMmmnfv2JTrxaOXR9qrM5_e4RwlQNchNByi7wbcMAY54hGdsRRI_Oib8ge2rRotMaANbJ7ecnTE9ZVXf4fFinXQnGIGLYuTjHxQc8gCmgcIVi5Xtz6XDx6irCxr3e_1FOv_9YGR9YD7NYAhwVzY68Q%3D%3D'>here</a>.
+                      The citation for the paper is: Binder, Seth, Holdahl, Ethan, Trinh, Ly, and Smith, John H. \"Humanity's Fundamental Environmental Limits\", Human Ecology, 2020, DOI 10.1007/s10745-020-00140-w.
+                      The paper has a <a href='https://github.com/binders1/maxpop'>GitHub repository</a> that contains the code for the project, the data for which is hosted on <a href='https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369'>Figshare</a>."),
                       h2("References"),
                       helpText("1. Shunlin Liang, Xiaotong Zhang. Global Land Surface Products: Photosynthetically Active Radiation Data Collection(2008-2010). Beijing Normal University, 2012. doi:10.6050/glass863.3005.db"),
                       br(),
