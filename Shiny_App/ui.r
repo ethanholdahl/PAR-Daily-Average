@@ -10,7 +10,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                     tags$body(
                       withMathJax(),
                       h2("Introduction"),
-                      helpText("In this document I will outline my methods used for calculating daily totals of photosynthetically active radiation (PAR)
+                      HTML("In this document I will outline my methods used for calculating daily totals of photosynthetically active radiation (PAR)
                       at a given location from incident PAR values. Photosynthetically active radiation is solar radiation in the 400-700 nm spectral range
                       which plants can use for photosynthesis. As such it is a key input to a variety of different environmental and ecological problems.
                       The data I use is the GLASS PAR product sourced from the Global Land Cover Facility. The GLASS PAR product has 5km and 3 hour spatial
@@ -20,7 +20,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                         <img src="Sun-Diagram-Solo.PNG" alt="diagram of solar radiation" width="49%" height="20%" /><img src="Sun-Diagram-Zoomed.PNG" alt="diagram of solar radiation" width="49%" height="20%" />
                         <p class="caption">diagram of solar radiation</p>
                         </div>'),
-                      helpText("We know that the amount of radiation emitted from the sun, the solar constant, is 1361 watts per square meter on a surface perpendicular
+                      HTML("We know that the amount of radiation emitted from the sun, the solar constant, is 1361 watts per square meter on a surface perpendicular
                         to the rays. Since this is a constant that implies that there is a limit to the amount of radiation a square meter on earth receives and
                         that it changes throughout the day depending on the solar elevation angle. Consider the diagrams above, it is clear that a ray of width 1
                         (representing 1 solar constant) is projected to a length of x on the surface where \\(\\small x = \\frac {1}{\\sin(\\theta)}\\). So, it follows
@@ -32,7 +32,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                         is being filtered out throughout the day. We can then linearly interpolate those ratio values between observations to get an estimate of PAR
                         between our observations."),
                       h2("Ratio method"),
-                      helpText("Generally, we can estimate the incident PAR for unobserved times by taking a weighted average of the PAR ratios of the nearest
+                      HTML("Generally, we can estimate the incident PAR for unobserved times by taking a weighted average of the PAR ratios of the nearest
                       observations and multiplying that by the sin of the sun's elevation angle (remember\\(\\small \\frac {1}{x} = \\sin(elevation)\\)). PAR ratios are
                       calculated as incident value/sin(elevation angle). The weighted average being based on how close the unobserved incident is to the nearest values.
                       So if there exists 2 observations at times \\(\\small T_1\\) and \\(\\small T_2\\) with \\(\\small R_1\\) and \\(\\small R_2\\) as the respective ratios,
@@ -41,7 +41,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                       We can estimate PAR between observations by integrating the above equation from \\(\\small T_1\\) to \\(\\small T_2\\) with respect to \\(\\small t\\),
                       and because the calculation is linear we can separate them and calculate the contribution to daily PAR that each observation had separately."),
                       br(),
-                      helpText("If there is only one observation in the day or if \\(\\small t\\) falls between sunrise and the first observation or between the last observation and
+                      HTML("If there is only one observation in the day or if \\(\\small t\\) falls between sunrise and the first observation or between the last observation and
                       sunset then we just use the ratio for the nearest observation (\\(\\small R_1\\)):\\(\\small InstPAR(t) = R_1*\\sin(elevation(t))\\). 
                       
                       Below I dissect the functional form of \\(\\small \\sin(elevation(t))\\) based off NOAA's calculation of solar elevation\\(^2\\).
@@ -58,12 +58,12 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                       when there are daylight observations on either side of \\(\\small t\\). When there is only one daylight observation close to \\(\\small t\\) then:
                       $$\\small InstPAR(t) = R_1*(A-B*\\cos(t*360+C))$$"),
                       br(),
-                      helpText("So, to calculate PAR for a given day at a specified location with \\(\\small n\\) daylight observations we integrate \\(\\small InstPAR(t)\\) 
+                      HTML("So, to calculate PAR for a given day at a specified location with \\(\\small n\\) daylight observations we integrate \\(\\small InstPAR(t)\\) 
                       from sunrise to sunset:
                       $$\\small \\int_{Sunrise}^{T_1} R_1*(A-B*\\cos(t*360+C))dt + \\int_{T_1}^{T_2} (R_2 * \\frac{t-T_1}{T_2-T_1}+R_1*\\frac{T_2-t}{T_2-T_1})*(A-B*\\cos(t*360+C))dt +...$$
                                $$\\small + \\int_{T_{n-1}}^{T_n} (R_n *\\frac{t-T_{n-1}}{T_n-T_{n-1}}+R_{n-1}*\\frac{T_n-t}{T_n-T_{n-1}})*(A-B*\\cos(t*360+C))dt + \\int_{T_n}^{Sunset} R_n*(A-B*\\cos(t*360+C))dt$$"),
                       h2("Existing methods"),
-                      helpText("There already exist methods for calculating daily PAR values. Liang et al.\\(^3\\) has published a book containing algorithms for a variety of different
+                      HTML("There already exist methods for calculating daily PAR values. Liang et al.\\(^3\\) has published a book containing algorithms for a variety of different
                       GLASS products. Chapter 6 focuses on calculating daily PAR from the dataset we are using. They cite Wang et al. (2010) with the algorithms they use. Given any
                       observed PAR, \\(\\small InstPAR(T_{overpass})\\), at time \\(T_{overpass}\\) they interpolate to calculate \\(\\small InstPAR(t)\\) at any time of day with:
                       $$\\small InstPAR(t)=InstPAR(T_{overpass}) \\cfrac{\\sin(\\frac {(t-T_{sunrise)}*\\pi}{T_{sunset}-T_{sunrise}})}{\\sin(\\frac {(T_{overpass}-T_{sunrise)}*\\pi}{T_{sunset}-T_{sunrise}})}$$
@@ -74,7 +74,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                       of two sinusoidally interpolated values:
                                $$\\small InstPAR(t) = \\cfrac{T_2-t}{T_2-T_1} InstPAR_{T_1}(t)+\\cfrac{t-T_1}{T_2-T_1} InstPAR_{T_2}(t)$$"),
                       h2("Differences between methods"),
-                      helpText("Navigate to the Plots page for a visual depiction of the similarities and differences between my ratio method and Wang et al.'s methods.
+                      HTML("Navigate to the Plots page for a visual depiction of the similarities and differences between my ratio method and Wang et al.'s methods.
                                You will notice that Wang et al.'s algorithm works great near the equator. However, the closer we get to the poles the more inaccurate Wang's
                                algorithms get (try moving latitude to -77 or so with the rest of the options in their defult settings). If we accept the PAR mechanics section
                                on this page and accept the idea of linearly interpolating the PAR ratios then Wang et al.'s algorithm can be replicated by assuming that solar
@@ -94,7 +94,7 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
                                these cases I ignore solar position and assume a linear relationship between the PAR of the troublesome observation and its neighboring observations.
                                Pseudocode with a graphical guide for exactly how I addressed these situations can be found in this project's <a href='https://github.com/ethanholdahl/PAR-Daily-Average'>GitHub repository</a>."),
                       h2("Remarks"),
-                      helpText("Wang et al.'s algorithm is very good in the majority of cases because it is so similar to the ratio method. However it is not robust to extreme
+                      HTML("Wang et al.'s algorithm is very good in the majority of cases because it is so similar to the ratio method. However it is not robust to extreme
                                latitudes. My method of looking directly at the ratios is robust to all locations and, because the math works out nicely, is no more computationally
                                expensive than the existing method."),
                       h2("Applications"),
