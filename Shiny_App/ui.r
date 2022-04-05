@@ -1,11 +1,15 @@
 
 ## Load and install the packages
 library("tidyverse", "shiny")
-theme_set(theme_minimal())
 
 
 # Define UI for the application 
-navbarPage(title = "Photosynthetically Active Radiation (PAR)",
+fluidPage(
+  #theme = shinytheme("sandstone"),
+  tags$head(HTML("<title> Photosynthetically Active Radiation (PAR) by Ethan Holdahl </title>")),
+  
+navbarPage(
+  title = HTML("Photosynthetically Active Radiation (PAR) by <a href='https://ethanholdahl.com'>Ethan Holdahl</a>"),
            tabPanel("Methods",
                     tags$body(
                       withMathJax(),
@@ -189,6 +193,8 @@ navbarPage(title = "Photosynthetically Active Radiation (PAR)",
            h2("Input Data"), uiOutput("data")),
   tabPanel("Code",
            h3("Matlab Code"), uiOutput("matlab"),
-           br(),br(),br(),
-           h5("I am working on translating the matlab code to R code. When it is done it will be posted on here as well as on the GitHub page."))
+           br(),br(),br()
+           #h5("I am working on translating the matlab code to R code. When it is done it will be posted on here as well as on the GitHub page.")
   )
+)
+)
