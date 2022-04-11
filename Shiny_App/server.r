@@ -241,7 +241,7 @@ function(input, output) {
     
     time_ele_PAR = add_wang(t, Latitude, Longitude, year, day)
     
-    ###Seperating observations
+    ###Separating observations
     observations = time_ele_PAR %>%
       filter(observation==TRUE)
     
