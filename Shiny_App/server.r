@@ -229,6 +229,9 @@ function(input, output) {
     
     #fill days with observations
     
+    wang_calculation = wang_calculation %>%
+      arrange(time)
+    
     i = 0:16 * precision + 1
     wang_calculation$wang_PAR[i] = wang_calculation$PAR[i]
     time_ele_PAR = time_ele_PAR %>%
@@ -348,7 +351,7 @@ function(input, output) {
     
     
     
-    # set PAR with times where SS is the first observation to 0
+    # set PAR at times where SS is the first observation to 0
     
     SS_adjust_e = ratio_calc %>%
       filter(obs1 == 18 + iSR |
@@ -377,6 +380,10 @@ function(input, output) {
     
     #Fill days with observations
     
+    ratio_calc = ratio_calc %>%
+      arrange(time)
+    
+    
     i = 0:16 * precision + 1
     ratio_calc$linear_ratio[i] = ratio_calc$ratioMax[i]
     
@@ -386,6 +393,7 @@ function(input, output) {
     
     return(time_ele_PAR)
   }
+  
   
   observations = function(t, Latitude, Longitude, year, day) {
     observations = add_ratio(t, Latitude, Longitude, year, day)
