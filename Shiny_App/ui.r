@@ -115,6 +115,17 @@ navbarPage(
                       )
                     ),
            tabPanel("Plots",
+                    h2("Differences Between the Ratio Method and Wang et al."),
+                    HTML("You may select paramaters as well as which interpolation method to use on the input panel on the left. On the right, plots are depecting the 1. Solar Elevation 2. Interpolated PAR Values and 3. Interpolated PAR Ratio"),
+                    br(),
+                    HTML("Input values except for time are self explanatory. The time variable represents the time in GMT standardized such that a full, 24 hour, day is equal to length 1. In the data used, Incident PAR values were collected every 3 hours for a total of 8 times per day. As such, you can set time equal to any time incident PAR would be collected.
+                         The time variable is only used in the first plot to depict the elevation needed by the Wang et al. method for the ratio of interpolated values to exhibit a linear relationship between observations. 
+                         In plots 2 and 3, for each observation at a time where there would be sunlight, a number between 0 and 1 is randomly selected to be the PAR ratio for that observation. That number is then multiplied by the theoretical maximum PAR value at that solar elevation to create the PAR value at that observation. Note: random gerenation is used here as these plots are just for visualization puropses for how the interpolation methods work and differ.        
+                         
+                         You will notice that Wang et al.'s algorithm works great for the vast majority of observations. However, the closer we get to the poles the more inaccurate Wang's
+                               algorithms get (try moving latitude to -77 or so with the rest of the options in their defult settings)."),
+                    br(),
+                    
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
@@ -173,7 +184,7 @@ navbarPage(
     
     
     # Show a plot of the generated distribution
-    mainPanel(plotOutput("ratio"), br(), br(), br(), plotOutput("elevation"), br(), br(), br(), plotOutput("PAR")
+    mainPanel(plotOutput("elevation"), br(), br(), br(), plotOutput("PAR"), br(), br(), br(), plotOutput("ratio")
               ))),
   tabPanel("Data",
            h2("Daily Average Data"),
