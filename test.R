@@ -205,6 +205,9 @@ add_wang = function(t, Latitude, Longitude, year, day) {
   
   #fill days with observations
   
+  wang_calculation = wang_calculation %>%
+    arrange(time)
+  
   i = 0:16 * precision + 1
   wang_calculation$wang_PAR[i] = wang_calculation$PAR[i]
   time_ele_PAR = time_ele_PAR %>%
@@ -324,7 +327,7 @@ add_ratio = function(t, Latitude, Longitude, year, day) {
   
   
   
-  # set PAR with times where SS is the first observation to 0
+  # set PAR at times where SS is the first observation to 0
   
   SS_adjust_e = ratio_calc %>%
     filter(obs1 == 18 + iSR |
@@ -353,6 +356,10 @@ add_ratio = function(t, Latitude, Longitude, year, day) {
   
   #Fill days with observations
   
+  ratio_calc = ratio_calc %>%
+    arrange(time)
+  
+  
   i = 0:16 * precision + 1
   ratio_calc$linear_ratio[i] = ratio_calc$ratioMax[i]
   
@@ -378,8 +385,8 @@ Wang = TRUE
 ratio = TRUE
 
 time = 1
-Latitude = -70
-Longitude = 0
+Latitude = -40
+Longitude = 10
 year = 2020
 day = 1
 
@@ -432,7 +439,7 @@ ggplot(data = NULL,
   geom_line(data = NULL, aes(x=t, y = wang_elevation( time, t,  Latitude,  Longitude,  year,  day), size = 1, color = 0))+
   geom_point(data = NULL, aes(x= time, y = sin(elevation( time,  Latitude,  Longitude,  year,  day)*pi/180), size = 5, color = 0 )) +
   scale_size(guide = 'none') +
-  labs(x = "time", y = "sin(elevation)", color = "sin(ele)", title = "Solar elevation for selected inputs.", 
+  labs(x = "time", y = "sin(elevation)", color = "sin(ele)", title = "Solar elevation for selected inputs.",
        caption = str_wrap("The large purple point represents an observation at the specified time
            The purple line shows the elevation under which Wang's algorithm yields a linear relationship in interpolated PAR ratio between observations.", width = 80)) +
   theme(plot.title = element_text(size = 18, hjust = .5), plot.caption = element_text(size = 12, hjust = 1))
