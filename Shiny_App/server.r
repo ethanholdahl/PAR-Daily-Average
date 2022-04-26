@@ -67,17 +67,6 @@ function(input, output, session) {
   })
   
   
-  
-  
-  
-  
-  
-  url1 <-
-    a("Figshare", href = "https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369")
-  output$results = renderUI({
-    tagList("Link to output:", url1)
-  })
-  
   url2 <- a("GLASS", href = "http://www.glass.umd.edu/PAR/")
   output$data = renderUI({
     tagList("Link to inputs:", url2)

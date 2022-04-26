@@ -122,7 +122,7 @@ fluidPage(
                                for sunrise and sunset respectively. If we do not account for this and blindly plug our values into one of the algorithms provided above then our
                                interpolated PAR values are negative. I correct for these infrequent occurrences, which are easily identified, with a linear contingent plan. In
                                these cases I ignore solar position and assume a linear relationship between the PAR of the troublesome observation and its neighboring observations.
-                               Pseudocode with a graphical guide for exactly how I addressed these situations can be found in this project's <a href='https://github.com/ethanholdahl/PAR-Daily-Average'>GitHub repository</a>."
+                               Pseudocode with a graphical guide for exactly how I addressed these situations can be found in this project's <a href='https://github.com/ethanholdahl/PAR-Daily-Average' style='color: darkgreen; text-decoration: none'>GitHub repository</a>."
         ),
         h2("Remarks"),
         HTML(
@@ -133,9 +133,9 @@ fluidPage(
         h2("Applications"),
         HTML(
           "These data methods were created to produce a key input for the paper \"Humanity's Fundamental Environmental Limits\" (Binder, Holdahl, Trinh and Smith, 2020).
-                      View only access to that paper can be found <a href='https://link.springer.com/epdf/10.1007/s10745-020-00140-w?author_access_token=vMmmnfv2JTrxaOXR9qrM5_e4RwlQNchNByi7wbcMAY54hGdsRRI_Oib8ge2rRotMaANbJ7ecnTE9ZVXf4fFinXQnGIGLYuTjHxQc8gCmgcIVi5Xtz6XDx6irCxr3e_1FOv_9YGR9YD7NYAhwVzY68Q%3D%3D'>here</a>.
+                      View only access to that paper can be found <a href='https://link.springer.com/epdf/10.1007/s10745-020-00140-w?author_access_token=vMmmnfv2JTrxaOXR9qrM5_e4RwlQNchNByi7wbcMAY54hGdsRRI_Oib8ge2rRotMaANbJ7ecnTE9ZVXf4fFinXQnGIGLYuTjHxQc8gCmgcIVi5Xtz6XDx6irCxr3e_1FOv_9YGR9YD7NYAhwVzY68Q%3D%3D' style='color: darkgreen; text-decoration: none'>here</a>.
                       The citation for the paper is: Binder, Seth, Holdahl, Ethan, Trinh, Ly, and Smith, John H. \"Humanity's Fundamental Environmental Limits\", Human Ecology, 2020, DOI 10.1007/s10745-020-00140-w.
-                      The paper has a <a href='https://github.com/binders1/maxpop'>GitHub repository</a> that contains the code for the project, the data for which is hosted on <a href='https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369'>Figshare</a>."
+                      The paper has a <a href='https://github.com/binders1/maxpop' style='color: darkgreen; text-decoration: none'>GitHub repository</a> that contains the code for the project, the data for which is hosted on <a href='https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369' style='color: darkgreen; text-decoration: none'>Figshare</a>."
         ),
         h2("References"),
         helpText(
@@ -240,11 +240,11 @@ fluidPage(
       "Data",
       value = "Data",
       h2("Daily Average Data"),
-      uiOutput("results"),
+      HTML("Link to dataset: <a href='https://figshare.com/articles/Humanity_s_Fundamental_Environmental_Limits_--_model_input_files/9983369' style='color: darkgreen; text-decoration: none'>Figshare</a>"),
       h3("Selected daily averages (results):"),
       tabsetPanel(
         id = "dataTabs",
-        tabPanel("January 1", value = "January",
+        tabPanel("January 1", value = "January", color = 'green',
                  img(src = "Jan1.PNG")),
         tabPanel("April 1", value = "April",
                  img(src = "April1.PNG")),
@@ -262,8 +262,8 @@ fluidPage(
     tabPanel(
       "Code",
       value = "Code",
-      h3("Matlab Code"),
-      uiOutput("matlab"),
+      h3("GitHub Repository"),
+      HTML('<a href="https://github.com/ethanholdahl/PAR-Daily-Average"><img src="https://github-readme-stats.vercel.app/api/pin/?username=ethanholdahl&amp;repo=PAR-Daily-Average&amp;title_color=004623&amp;text_color=462300&amp;bg_color=FFFFF&amp;border_color=004623&amp;icon_color=330046 alt="Repo Card" align="left"></a>'),
       br(),
       br(),
       br(),
