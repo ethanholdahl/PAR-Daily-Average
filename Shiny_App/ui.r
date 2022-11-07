@@ -55,7 +55,7 @@ fluidPage(
                       observations and multiplying that by the sin of the sun's elevation angle (remember\\(\\small \\frac {1}{x} = \\sin(elevation)\\)). PAR ratios are
                       calculated as incident value/sin(elevation angle). The weighted average being based on how close the unobserved incident is to the nearest values.
                       So if there exists 2 observations at times \\(\\small T_1\\) and \\(\\small T_2\\) with \\(\\small R_1\\) and \\(\\small R_2\\) as the respective ratios,
-                      the estimated incident PAR at time \\(\\small t\\) where \\(T_1<t<T_2\\) is:
+                      the estimated incident PAR at time \\(\\small t\\) where \\(T_1 < t < T_2\\) is:
                       $$\\small InstPAR(t) = (R_2 * \\frac{t-T_1}{T_2-T_1}+R_1*\\frac{T_2-t}{T_2-T_1})*\\sin(elevation(t))$$
                       We can estimate PAR between observations by integrating the above equation from \\(\\small T_1\\) to \\(\\small T_2\\) with respect to \\(\\small t\\),
                       and because the calculation is linear we can separate them and calculate the contribution to daily PAR that each observation had separately."
