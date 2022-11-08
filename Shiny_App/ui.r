@@ -105,7 +105,7 @@ fluidPage(
                     for a visual depiction of the similarities and differences between my ratio method and Wang et al.'s methods.
                                You will notice that Wang et al.'s algorithm works great near the equator. However, the closer we get to the poles the more inaccurate Wang's
                                algorithms get (try moving latitude to -77 or so with the rest of the options in their defult settings). If we accept the PAR mechanics section
-                               on this page and accept the idea of linearly interpolating the PAR ratios then Wang et al.'s algorithm can be replicated by assuming that solar
+                               on this page and accept the idea of linearly interpolating the PAR ratios then Wang et al.'s algorithm is equivalent to the ratio method when solar
                                elevation is 0 degrees at sunrise and sunset and reaches 90 degrees at mid-day. However, as we get nearer to the poles this assumption becomes
                                less accurate. At the poles the solar elevation is effectively the same throughout the entire day. By interpolating using the assumption
                                inherent in Wang et al.'s algorithm we get InstPAR values that can exceed the theoretically maximum PAR value at that elevation, sometimes by
